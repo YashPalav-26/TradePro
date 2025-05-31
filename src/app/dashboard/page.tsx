@@ -723,7 +723,6 @@ const EnhancedTradeProDashboard: React.FC = () => {
   const [token, setToken] = useState<string | null>(null);
 
   // --- All your useCallback wrapped functions (fetchUserAssets, saveUserAssets, addToWatchlist, etc.) remain unchanged here ---
-  // (These were correctly memoized and handled localStorage for hydration in previous versions)
   const fetchUserAssets = useCallback(async (authToken: string) => {
     try {
       const response = await axios.get(
@@ -983,41 +982,29 @@ const EnhancedTradeProDashboard: React.FC = () => {
             onRemoveFromWatchlist={removeFromWatchlist}
           />
           <TopByMarketCap />
+
+          {/* Portfolio Section - In Flow, Before NewsFeed */}
+          <div className="my-6 sm:my-8 px-2 sm:px-0">
+            {" "}
+            {/* Standard section spacing and padding */}
+            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">
+              My Portfolio
+            </h2>
+            <PortfolioSidebarComponent
+              portfolio={portfolio}
+              remove={removeFromPortfolio}
+              updatePrice={updatePrice}
+              handleTransaction={handleTransaction}
+            />
+          </div>
+
           <NewsFeed />
-          {/* Content ends here, before the fixed desktop sidebar and the mobile portfolio section */}
+          {/* Any other components that should come after NewsFeed */}
         </main>
       </div>
 
-      {/* Fixed Desktop Portfolio Sidebar (Right Side) */}
-      {/* This div itself is positioned, not the PortfolioSidebarComponent directly */}
-      <div className="hidden xl:block fixed right-4 top-[calc(theme(spacing.16)+theme(spacing.4))] bottom-4 z-20 w-80">
-        {/* w-80 matches the class from PortfolioSidebarComponent for consistent width */}
-        <PortfolioSidebarComponent
-          portfolio={portfolio}
-          remove={removeFromPortfolio}
-          updatePrice={updatePrice}
-          handleTransaction={handleTransaction}
-        />
-      </div>
-
-      {/* Portfolio section for smaller than xl screens (rendered at the bottom of main content flow) */}
-      <div className="xl:hidden my-6 px-2 sm:px-0 container mx-auto max-w-7xl">
-        {" "}
-        {/* Added container and max-w for consistency */}
-        <div className="lg:px-6 xl:px-8">
-          {" "}
-          {/* Added padding to match main content area's horizontal padding */}
-          <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">
-            My Portfolio
-          </h2>
-          <PortfolioSidebarComponent
-            portfolio={portfolio}
-            remove={removeFromPortfolio}
-            updatePrice={updatePrice}
-            handleTransaction={handleTransaction}
-          />
-        </div>
-      </div>
+      {/* NO fixed right sidebar for portfolio, as it's now in the main content flow */}
+      {/* NO separate mobile/tablet portfolio section at the very bottom, as it's handled above */}
     </div>
   );
 };
