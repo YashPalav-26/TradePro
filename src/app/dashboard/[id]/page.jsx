@@ -36,39 +36,6 @@ const Breadcrumb = ({ stock }) => (
 );
 
 const generateRandomData = (currentValue, points) => {
-  const data = [["Time", "Low", "Open", "Close", "High"]]; // Header row
-
-  let lastClose = currentValue;
-
-  for (let i = 0; i < points; i++) {
-    // Generate data forwards in time for consistency if appending
-    const time = new Date(Date.now() + i * 5000).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-    const openVal = lastClose + (Math.random() * 10 - 5) * (lastClose * 0.001); // Smaller fluctuations
-    const closeVal = openVal + (Math.random() * 10 - 5) * (openVal * 0.001);
-    const lowVal =
-      Math.min(openVal, closeVal) -
-      Math.random() * 5 * (Math.min(openVal, closeVal) * 0.001);
-    const highVal =
-      Math.max(openVal, closeVal) +
-      Math.random() * 5 * (Math.max(openVal, closeVal) * 0.001);
-
-    data.push([
-      time,
-      Math.max(0.01, lowVal),
-      Math.max(0.01, openVal),
-      Math.max(0.01, closeVal),
-      Math.max(0.01, highVal),
-    ]);
-    lastClose = closeVal;
-  }
-  // If generating historical, reverse for chart (oldest first)
-  // For live, you'd typically append newest.
-  // The original code generates data backwards with Date.now() - i * 5000
-  // Let's stick to the original time generation for now if that's intended.
   const historicalData = [["Time", "Low", "Open", "Close", "High"]];
   let baseForHistorical = currentValue;
   for (let i = 0; i < points; i++) {
@@ -79,16 +46,15 @@ const generateRandomData = (currentValue, points) => {
       minute: "2-digit",
       second: "2-digit",
     });
+    // Make fluctuations smaller and relative to current price for more realism
+    const fluctuationMagnitude = baseForHistorical * 0.001; // 0.1% of current price
     const open =
-      baseForHistorical +
-      (Math.random() * 10 - 5) * (baseForHistorical * 0.001);
-    const close = open + (Math.random() * 10 - 5) * (open * 0.001);
+      baseForHistorical + (Math.random() * 10 - 5) * fluctuationMagnitude;
+    const close = open + (Math.random() * 10 - 5) * fluctuationMagnitude;
     const low =
-      Math.min(open, close) -
-      Math.random() * 5 * (Math.min(open, close) * 0.001);
+      Math.min(open, close) - Math.random() * 5 * fluctuationMagnitude;
     const high =
-      Math.max(open, close) +
-      Math.random() * 5 * (Math.max(open, close) * 0.001);
+      Math.max(open, close) + Math.random() * 5 * fluctuationMagnitude;
     historicalData.push([
       time,
       Math.max(0.01, low),
@@ -96,14 +62,14 @@ const generateRandomData = (currentValue, points) => {
       Math.max(0.01, close),
       Math.max(0.01, high),
     ]);
-    baseForHistorical = close; // Next point builds on this close
+    baseForHistorical = close;
   }
   return historicalData;
 };
 
 // Mock Chart component
-// FIX: Prefixed unused props with an underscore
-const Chart = ({ _chartType, width, height, data, _options }) => {
+const Chart = ({ chartType, width, height, data, options: _unusedOptions }) => {
+  // Use chartType, mark options as unused if needed
   const lastDataPoint = data && data.length > 1 ? data[data.length - 1] : null;
   const currentDisplayValue =
     lastDataPoint && typeof lastDataPoint[3] === "number"
@@ -116,7 +82,8 @@ const Chart = ({ _chartType, width, height, data, _options }) => {
       className="bg-gray-700 rounded flex items-center justify-center text-gray-400"
     >
       <div className="text-center">
-        <div>Candlestick Chart (Mock)</div>
+        {/* Use the chartType prop */}
+        <div>{chartType || "Chart"} (Mock)</div>
         <div className="text-sm mt-2">
           Data points: {Math.max(0, data.length - 1)}
         </div>
@@ -128,17 +95,26 @@ const Chart = ({ _chartType, width, height, data, _options }) => {
 
 const StockChart = ({ stock }) => {
   const [timeRange, setTimeRange] = useState("5M");
-  const initialStockValue = 4253.71; // More realistic starting stock value
-  const [data, setData] = useState(() =>
-    generateRandomData(initialStockValue, 5)
+  const initialStockValue = 4253.71;
+  const [data, setData] = useState(
+    () => generateRandomData(initialStockValue, getDataPointsStatic(timeRange)) // Use static version for initial state
   );
-  const [currentValue, setCurrentValue] = useState(initialStockValue);
+  const [currentValue, setCurrentValue] = useState(() => {
+    const initialData = generateRandomData(
+      initialStockValue,
+      getDataPointsStatic(timeRange)
+    );
+    return initialData.length > 1
+      ? initialData[initialData.length - 1][3]
+      : initialStockValue;
+  });
   const [change, setChange] = useState({ value: 0, percentage: 0 });
 
-  const getDataPoints = (range) => {
+  // Static version for initial state and non-hook contexts
+  function getDataPointsStatic(range) {
     switch (range) {
       case "5M":
-        return 5 * 12; // 1 point per 5 sec for 5 mins
+        return 5 * 12;
       case "10M":
         return 10 * 12;
       case "15M":
@@ -150,63 +126,58 @@ const StockChart = ({ stock }) => {
       default:
         return 5 * 12;
     }
-  };
+  }
 
-  // Effect for initializing and changing time range
+  const getDataPoints = useCallback((range) => {
+    // Memoize if used in effects that don't change often
+    return getDataPointsStatic(range);
+  }, []);
+
   useEffect(() => {
     const points = getDataPoints(timeRange);
-    const newData = generateRandomData(currentValue, points); // Generate fresh data for the range
+    const newData = generateRandomData(currentValue, points);
     setData(newData);
     if (newData.length > 1) {
-      const newCurrent = newData[newData.length - 1][3]; // Close of the last point
-      setCurrentValue(newCurrent);
+      const newCurrent = newData[newData.length - 1][3];
+      // setCurrentValue(newCurrent); // Avoid self-update loop with currentValue dependency
 
-      const initialVal = newData[1][2]; // Open of the first data point
+      const initialVal = newData[1][2];
       const changeVal = newCurrent - initialVal;
       const changePercent =
         initialVal !== 0 ? (changeVal / initialVal) * 100 : 0;
       setChange({ value: changeVal, percentage: changePercent });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRange]); // Removed currentValue from here as it might cause loops if it updates itself.
-  // This effect is primarily for timeRange changes. Initial load is handled by useState.
+  }, [timeRange, getDataPoints]); // currentValue removed to prevent potential loop, initial data sets it.
 
-  // Effect for live updates
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentValue((prevCurrentValue) => {
-        const randomChange =
-          (Math.random() - 0.5) * 2 * (prevCurrentValue * 0.0005); // Smaller, more realistic tick
+        const randomPercentageChange = (Math.random() - 0.5) * 0.001; // e.g., +/- 0.05%
+        const changeAmount = prevCurrentValue * randomPercentageChange;
         const newActualCurrentValue = Math.max(
           0.01,
-          prevCurrentValue + randomChange
+          prevCurrentValue + changeAmount
         );
 
         setData((prevData) => {
+          if (!prevData || prevData.length < 1) return prevData; // Should not happen with initialization
+
           const newPointTime = new Date().toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
             second: "2-digit",
           });
-          const open =
-            prevData.length > 1
-              ? prevData[prevData.length - 1][3]
-              : newActualCurrentValue; // Open is previous close
+
+          const lastBar = prevData[prevData.length - 1];
+          const open = lastBar ? lastBar[3] : newActualCurrentValue; // Open is previous close
           const close = newActualCurrentValue;
-          const low =
-            Math.min(
-              open,
-              close,
-              prevData.length > 1 ? prevData[prevData.length - 1][1] : close
-            ) -
-            Math.random() * (close * 0.0002);
+
+          // Make low/high relative to open/close for the new bar
+          const barFluctuationMag = close * 0.0005;
+          const low = Math.min(open, close) - Math.random() * barFluctuationMag;
           const high =
-            Math.max(
-              open,
-              close,
-              prevData.length > 1 ? prevData[prevData.length - 1][4] : close
-            ) +
-            Math.random() * (close * 0.0002);
+            Math.max(open, close) + Math.random() * barFluctuationMag;
 
           const newSingleDataPoint = [
             newPointTime,
@@ -216,14 +187,21 @@ const StockChart = ({ stock }) => {
             Math.max(0.01, high),
           ];
 
-          const updatedData = [...prevData.slice(1), newSingleDataPoint]; // Remove oldest, add newest
-          // Ensure header is always first
-          return [prevData[0], ...updatedData.slice(-getDataPoints(timeRange))];
+          // Remove oldest data point (after header), add newest
+          const dataWithoutHeader = prevData.slice(1);
+          const updatedDataContent = [
+            ...dataWithoutHeader.slice(1),
+            newSingleDataPoint,
+          ];
+
+          return [
+            prevData[0],
+            ...updatedDataContent.slice(-getDataPoints(timeRange)),
+          ];
         });
 
-        // Update change based on the start of the current dataset for the timeRange
         if (data.length > 1 && data[1] && typeof data[1][2] === "number") {
-          const initialValForChange = data[1][2]; // Open of the first *displayed* data point
+          const initialValForChange = data[1][2];
           const changeVal = newActualCurrentValue - initialValForChange;
           const changePercent =
             initialValForChange !== 0
@@ -233,14 +211,12 @@ const StockChart = ({ stock }) => {
         }
         return newActualCurrentValue;
       });
-    }, 5000); // Update every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
-    // FIX: Added currentValue. `data` is also a dependency because `setChange` reads from it.
-  }, [timeRange, currentValue, data]);
+  }, [timeRange, data, currentValue, getDataPoints]); // data, currentValue, getDataPoints are dependencies
 
   const chartOptions = useMemo(
-    // Renamed to chartOptions to avoid conflict if you use google charts' options
     () => ({
       backgroundColor: "transparent",
       chartArea: { width: "90%", height: "80%" },
@@ -287,7 +263,7 @@ const StockChart = ({ stock }) => {
               }`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              key={change.value} // Re-trigger animation on change
+              key={change.value}
             >
               {change.value >= 0 ? (
                 <ArrowUpRight size={16} className="mr-1" />
@@ -318,12 +294,13 @@ const StockChart = ({ stock }) => {
           </motion.button>
         </div>
       </div>
+      {/* Pass the props without underscores if Chart definition expects them without underscores */}
       <Chart
-        chartType="CandlestickChart" // This prop is now _chartType in the mock
+        chartType="CandlestickChart"
         width="100%"
-        height="300px" // Adjusted for responsiveness
+        height="300px"
         data={data}
-        options={chartOptions} // This prop is now _options in the mock
+        options={chartOptions}
       />
       <div className="flex justify-around md:justify-between mt-4 overflow-x-auto space-x-1">
         {["5M", "10M", "15M", "30M", "1H"].map((range) => (
@@ -346,6 +323,10 @@ const StockChart = ({ stock }) => {
     </motion.div>
   );
 };
+
+// ... rest of your OptionsTable, OpenInterest, and StockDetailPage components remain the same
+// Ensure OptionsTable and OpenInterest useEffect hooks also have correct dependencies if they use
+// props or state from their outer scope in their interval/timeout callbacks.
 
 const OptionsTable = ({ stock }) => {
   const [options, setOptions] = useState([
@@ -388,15 +369,15 @@ const OptionsTable = ({ stock }) => {
             0.01,
             option.callPrice + (Math.random() - 0.5) * (option.callPrice * 0.01)
           ),
-          callChange: (Math.random() - 0.5) * 10, // As percentage change
+          callChange: (Math.random() - 0.5) * 10,
           putPrice: Math.max(
             0.01,
             option.putPrice + (Math.random() - 0.5) * (option.putPrice * 0.01)
           ),
-          putChange: (Math.random() - 0.5) * 10, // As percentage change
+          putChange: (Math.random() - 0.5) * 10,
         }))
       );
-    }, 2000); // Slower update for options table
+    }, 2000);
 
     return () => clearInterval(interval);
   }, []);
@@ -423,7 +404,7 @@ const OptionsTable = ({ stock }) => {
         <tbody>
           {options.map((option, index) => (
             <motion.tr
-              key={index}
+              key={`${option.strike}-${index}`} // More robust key
               className="border-b border-gray-700 text-xs md:text-sm"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -438,7 +419,7 @@ const OptionsTable = ({ stock }) => {
                   className={
                     option.callChange >= 0 ? "text-green-500" : "text-red-500"
                   }
-                  key={`call-${option.strike}-${option.callChange}`} // More unique key for animation
+                  key={`call-${option.strike}-${option.callChange}`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 >
@@ -458,7 +439,7 @@ const OptionsTable = ({ stock }) => {
                   className={
                     option.putChange >= 0 ? "text-green-500" : "text-red-500"
                   }
-                  key={`put-${option.strike}-${option.putChange}`} // More unique key
+                  key={`put-${option.strike}-${option.putChange}`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 >
@@ -493,7 +474,7 @@ const OpenInterest = () => {
           prevData.totalPutOI + Math.floor((Math.random() - 0.5) * 10000)
         ),
         putCallRatio: Math.max(
-          0.1, // Ensure PCR doesn't go too low
+          0.1,
           prevData.putCallRatio + (Math.random() - 0.5) * 0.01
         ),
         totalCallOI: Math.max(
@@ -501,7 +482,7 @@ const OpenInterest = () => {
           prevData.totalCallOI + Math.floor((Math.random() - 0.5) * 10000)
         ),
       }));
-    }, 2500); // Slower update for OI
+    }, 2500);
 
     return () => clearInterval(interval);
   }, []);
@@ -509,7 +490,7 @@ const OpenInterest = () => {
   return (
     <motion.div
       {...fadeInUp}
-      className="bg-gray-800 p-4 md:p-6 rounded-lg shadow-lg my-6" // Added 'my-6' for spacing
+      className="bg-gray-800 p-4 md:p-6 rounded-lg shadow-lg my-6"
     >
       <h3 className="text-lg md:text-xl font-bold text-white mb-4 flex items-center">
         <BarChart2 size={20} className="mr-2" />
@@ -555,12 +536,10 @@ const OpenInterest = () => {
 };
 
 export default function StockDetailPage({ params }) {
-  // Renamed for clarity
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate data fetching or page setup
-    const timer = setTimeout(() => setLoading(false), 1000); // Shorter loading for dev
+    const timer = setTimeout(() => setLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -583,8 +562,6 @@ export default function StockDetailPage({ params }) {
     <div className="bg-gray-900 min-h-screen text-gray-300">
       <Header />
       <main className="container mx-auto px-4 pb-8">
-        {" "}
-        {/* Added pb-8 for bottom padding */}
         <Breadcrumb stock={params.id} />
         <StockChart stock={params.id} />
         <OptionsTable stock={params.id} />
