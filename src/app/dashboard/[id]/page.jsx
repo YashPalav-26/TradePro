@@ -66,7 +66,7 @@ const generateRandomData = (currentValue, points) => {
   return historicalData;
 };
 
-const Chart = ({ chartType, width, height, data, options: _ }) => {
+const Chart = ({ chartType, width, height, data }) => {
   const lastDataPoint = data && data.length > 1 ? data[data.length - 1] : null;
   const currentDisplayValue =
     lastDataPoint && typeof lastDataPoint[3] === "number"
@@ -217,26 +217,26 @@ const StockChart = ({ stock }) => {
       ];
     });
 
-    // The "change" displayed should always be relative to the start of the current `data` window
-    // This `data` is the one set by Effect 1 when timeRange changes, or appended to by this effect.
-    if (data.length > 1 && data[1] && typeof data[1][2] === "number") {
-      const firstOpenInDisplayedWindow = data[1][2];
-      const changeVal = currentValue - firstOpenInDisplayedWindow;
-      const changePercent =
-        firstOpenInDisplayedWindow !== 0
-          ? (changeVal / firstOpenInDisplayedWindow) * 100
-          : 0;
-      // console.log("StockChart: Effect 3 updating 'change' display:", { value: changeVal, percentage: changePercent });
-      setChange({ value: changeVal, percentage: changePercent });
-    }
-  }, [currentValue, timeRange, getDataPoints]); // Removed `data` from here to break a potential loop where
-  // `setData` in this effect triggers this effect again via `data` dependency.
-  // The `change` will be calculated based on the `data` state as of the *previous* render.
-  // This might cause a one-render lag in the `change` display relative to the chart,
-  // but should prevent the max depth error.
-  // If `data` *must* be a dep for `setChange` to be perfectly in sync,
-  // then the `currentValue` update and `setData` update logic needs to be
-  // even more carefully separated or batched.
+    // Calculate change based on current data state
+    setData((currentData) => {
+      // The "change" displayed should always be relative to the start of the current data window
+      if (
+        currentData.length > 1 &&
+        currentData[1] &&
+        typeof currentData[1][2] === "number"
+      ) {
+        const firstOpenInDisplayedWindow = currentData[1][2];
+        const changeVal = currentValue - firstOpenInDisplayedWindow;
+        const changePercent =
+          firstOpenInDisplayedWindow !== 0
+            ? (changeVal / firstOpenInDisplayedWindow) * 100
+            : 0;
+        // console.log("StockChart: Effect 3 updating 'change' display:", { value: changeVal, percentage: changePercent });
+        setChange({ value: changeVal, percentage: changePercent });
+      }
+      return currentData; // Return the same data, this is just for accessing current state
+    });
+  }, [currentValue, timeRange, getDataPoints]); // Removed `data` from dependencies to prevent infinite loop
 
   const chartOptions = useMemo(
     () => ({
@@ -316,7 +316,6 @@ const StockChart = ({ stock }) => {
         width="100%"
         height="300px"
         data={data}
-        options={chartOptions}
       />
       <div className="flex justify-around md:justify-between mt-4 overflow-x-auto space-x-1">
         {["5M", "10M", "15M", "30M", "1H"].map((range) => (
