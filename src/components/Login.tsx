@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -20,13 +19,11 @@ const Login = () => {
         "http://localhost:5000/api/auth/login",
         { email, password }
       );
-
       console.log("✅ Server Response:", response.data); // Debugging log
 
       if (response.status === 200 && response.data.token) {
         console.log("🔒 Storing token...");
         localStorage.setItem("token", response.data.token); // Store token
-
         console.log("➡️ Redirecting to dashboard...");
         router.push("/dashboard"); // Redirect after successful login
       } else {
@@ -35,7 +32,6 @@ const Login = () => {
       }
     } catch (err: any) {
       console.error("🔥 Login Error:", err.response?.data || err.message); // Debugging log
-
       // More precise error message based on the server response
       setError(
         err.response?.data?.error ||
@@ -74,8 +70,7 @@ const Login = () => {
           </button>
         </form>
         <p className="mt-4 text-gray-300">
-          {/* FIX: Replaced ' with ' */}
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <a href="/register" className="text-blue-400 hover:underline">
             Sign Up
           </a>
