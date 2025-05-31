@@ -19,7 +19,7 @@ import {
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<{ username: string } | null>(null); // Keep setUser as is
+  const [user] = useState<{ username: string } | null>(null); // Removed setUser since it's not used
   const notifications = 3;
   const router = useRouter();
 
