@@ -981,7 +981,6 @@ const EnhancedTradeProDashboard: React.FC = () => {
             onAddToWatchlist={addToWatchlist}
             onRemoveFromWatchlist={removeFromWatchlist}
           />
-          <TopByMarketCap />
 
           {/* Portfolio Section - In Flow, Before NewsFeed */}
           <div className="my-6 sm:my-8 px-2 sm:px-0">
@@ -997,6 +996,8 @@ const EnhancedTradeProDashboard: React.FC = () => {
               handleTransaction={handleTransaction}
             />
           </div>
+
+          <TopByMarketCap />
 
           <NewsFeed />
           {/* Any other components that should come after NewsFeed */}
