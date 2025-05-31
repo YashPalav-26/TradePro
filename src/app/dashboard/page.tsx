@@ -718,11 +718,12 @@ const NewsFeed = () => {
 };
 
 const EnhancedTradeProDashboard: React.FC = () => {
-  // ... (state and callbacks like fetchUserAssets, saveUserAssets, addToWatchlist, etc. remain the same) ...
-  // They are already well-memoized and handle localStorage appropriately for hydration.
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [token, setToken] = useState<string | null>(null);
+
+  // --- All your useCallback wrapped functions (fetchUserAssets, saveUserAssets, addToWatchlist, etc.) remain unchanged here ---
+  // (These were correctly memoized and handled localStorage for hydration in previous versions)
   const fetchUserAssets = useCallback(async (authToken: string) => {
     try {
       const response = await axios.get(
@@ -948,13 +949,17 @@ const EnhancedTradeProDashboard: React.FC = () => {
     },
     []
   );
+  // --- End of useCallback wrapped functions ---
 
   return (
     <div className="bg-gray-900 min-h-screen text-gray-300 flex flex-col lg:flex-row relative">
+      {/* ActualWatchlistSidebar is for the left side */}
       <ActualWatchlistSidebar
         watchlist={watchlist}
         remove={removeFromWatchlist}
       />
+
+      {/* Main content area (center/right) */}
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
         <main className="container mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 flex-1 max-w-7xl">
@@ -977,28 +982,41 @@ const EnhancedTradeProDashboard: React.FC = () => {
             onAddToWatchlist={addToWatchlist}
             onRemoveFromWatchlist={removeFromWatchlist}
           />
-          <div className="hidden xl:block fixed right-4 top-[calc(theme(spacing.16)+theme(spacing.4))] bottom-4 z-20">
-            <PortfolioSidebarComponent
-              portfolio={portfolio}
-              remove={removeFromPortfolio}
-              updatePrice={updatePrice}
-              handleTransaction={handleTransaction}
-            />
-          </div>
           <TopByMarketCap />
           <NewsFeed />
-          <div className="xl:hidden my-6 px-2 sm:px-0">
-            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">
-              My Portfolio
-            </h2>
-            <PortfolioSidebarComponent
-              portfolio={portfolio}
-              remove={removeFromPortfolio}
-              updatePrice={updatePrice}
-              handleTransaction={handleTransaction}
-            />
-          </div>
+          {/* Content ends here, before the fixed desktop sidebar and the mobile portfolio section */}
         </main>
+      </div>
+
+      {/* Fixed Desktop Portfolio Sidebar (Right Side) */}
+      {/* This div itself is positioned, not the PortfolioSidebarComponent directly */}
+      <div className="hidden xl:block fixed right-4 top-[calc(theme(spacing.16)+theme(spacing.4))] bottom-4 z-20 w-80">
+        {/* w-80 matches the class from PortfolioSidebarComponent for consistent width */}
+        <PortfolioSidebarComponent
+          portfolio={portfolio}
+          remove={removeFromPortfolio}
+          updatePrice={updatePrice}
+          handleTransaction={handleTransaction}
+        />
+      </div>
+
+      {/* Portfolio section for smaller than xl screens (rendered at the bottom of main content flow) */}
+      <div className="xl:hidden my-6 px-2 sm:px-0 container mx-auto max-w-7xl">
+        {" "}
+        {/* Added container and max-w for consistency */}
+        <div className="lg:px-6 xl:px-8">
+          {" "}
+          {/* Added padding to match main content area's horizontal padding */}
+          <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">
+            My Portfolio
+          </h2>
+          <PortfolioSidebarComponent
+            portfolio={portfolio}
+            remove={removeFromPortfolio}
+            updatePrice={updatePrice}
+            handleTransaction={handleTransaction}
+          />
+        </div>
       </div>
     </div>
   );
