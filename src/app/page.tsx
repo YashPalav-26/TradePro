@@ -14,8 +14,9 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
-// import Router from "next/navigation";
 import { useRouter } from "next/navigation";
+import Image from "next/image"; // Import next/image
+
 const Animatedsection = ({ children }: any) => {
   const ref = useRef(null);
   const isinview = useInView(ref, { once: true, amount: 0.3 });
@@ -270,10 +271,14 @@ export default function Home() {
                 transition={{ duration: 0.8 }}
                 className="bg-gray-800 p-8 rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300 relative overflow-hidden group"
               >
-                <img
-                  className="w-full rounded-xl"
+                {/* FIX: Replaced <img> with <Image /> */}
+                <Image
+                  className="w-full rounded-xl object-cover"
                   src="https://i.ibb.co/C1jWyk9/1.jpg"
                   alt="Trading platform screenshot"
+                  width={800}
+                  height={600}
+                  priority
                 />
                 <motion.div
                   whileHover={{ opacity: 0.2 }}
@@ -293,10 +298,13 @@ export default function Home() {
                 transition={{ duration: 0.8 }}
                 className="bg-gray-800 p-8 rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300 relative overflow-hidden group"
               >
-                <img
+                {/* FIX: Replaced <img> with <Image /> */}
+                <Image
                   src="https://i.ibb.co/0K3ZTzt/2.jpg"
                   alt="Market analysis feature"
-                  className="w-full rounded-xl"
+                  className="w-full rounded-xl object-cover"
+                  width={800}
+                  height={600}
                 />
                 <motion.div
                   className="absolute inset-0 bg-blue-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300"

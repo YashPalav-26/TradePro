@@ -30,7 +30,8 @@ const DataAnalyticsDashboard = () => {
   // Generate initial data
   useEffect(() => {
     const generateInitialData = () => {
-      let prices: number[] = [];
+      // FIX 1: Changed 'let' to 'const'
+      const prices: number[] = [];
       const basePrice = 1000;
 
       return Array.from({ length: 50 }, (_, i) => {
@@ -89,14 +90,18 @@ const DataAnalyticsDashboard = () => {
           .slice(1);
 
         const mean =
-          priceChanges.reduce((sum, change) => sum + change, 0) /
-          priceChanges.length;
+          priceChanges.length > 0 // Guard against division by zero
+            ? priceChanges.reduce((sum, change) => sum + change, 0) /
+              priceChanges.length
+            : 0;
         const squaredDiffs = priceChanges.map((change) =>
           Math.pow(change - mean, 2)
         );
         const variance =
-          squaredDiffs.reduce((sum, diff) => sum + diff, 0) /
-          squaredDiffs.length;
+          squaredDiffs.length > 0 // Guard against division by zero
+            ? squaredDiffs.reduce((sum, diff) => sum + diff, 0) /
+              squaredDiffs.length
+            : 0;
         const volatility = Math.sqrt(variance);
 
         // Calculate moving average
@@ -111,14 +116,15 @@ const DataAnalyticsDashboard = () => {
           ).toLocaleTimeString(),
           price,
           rsi,
-          volatility,
+          volatility: isNaN(volatility) ? 0 : volatility, // Ensure volatility is not NaN
           movingAverage,
         };
       });
     };
 
     setData(generateInitialData());
-  }, []);
+    // FIX 2: Added marketTrend and marketVolatility to dependency array
+  }, [marketTrend, marketVolatility]);
 
   // Live data generation
   useEffect(() => {
@@ -126,6 +132,13 @@ const DataAnalyticsDashboard = () => {
 
     const addNewDataPoint = () => {
       setData((currentData) => {
+        if (currentData.length === 0) {
+          // Handle case where currentData might be empty if initial data generation fails or is delayed
+          // For now, let's just return the empty array to avoid errors,
+          // or you could initialize a single point here.
+          console.warn("Live data generation skipped: currentData is empty.");
+          return currentData;
+        }
         const lastPoint = currentData[currentData.length - 1];
         const prevPrice = lastPoint.price;
 
@@ -138,61 +151,58 @@ const DataAnalyticsDashboard = () => {
         );
 
         // Get recent prices including the new one
-        const recentPrices = [
-          ...currentData.slice(-9).map((d) => d.price),
+        const allPricesForCalc = [
+          ...currentData.slice(-13).map((d) => d.price), // Using 14 points for RSI-like calculation
           newPrice,
         ];
 
-        const priceChanges = recentPrices
-          .map((p, idx) => (idx > 0 ? p - recentPrices[idx - 1] : 0))
-          .slice(1);
-
-        const gains = priceChanges.filter((change) => change > 0);
-        const losses = priceChanges
-          .filter((change) => change < 0)
-          .map((change) => Math.abs(change));
-
-        const avgGain =
-          gains.length > 0
-            ? gains.reduce((sum, g) => sum + g, 0) / gains.length
-            : 0;
-        const avgLoss =
-          losses.length > 0
-            ? losses.reduce((sum, l) => sum + l, 0) / losses.length
-            : 0;
-
-        const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+        // Calculate RSI
+        let gainsRSI = 0;
+        let lossesRSI = 0;
+        for (let i = 1; i < allPricesForCalc.length; i++) {
+          const diff = allPricesForCalc[i] - allPricesForCalc[i - 1];
+          if (diff > 0) gainsRSI += diff;
+          else lossesRSI += Math.abs(diff);
+        }
+        const avgGainRSI = gainsRSI / (allPricesForCalc.length - 1);
+        const avgLossRSI = lossesRSI / (allPricesForCalc.length - 1);
+        const rs = avgLossRSI === 0 ? 100 : avgGainRSI / avgLossRSI; // Avoid division by zero
         const rsi = 100 - 100 / (1 + rs);
 
         // Calculate volatility
-        const pricePercentChanges = recentPrices
-          .map((p, idx) =>
-            idx > 0
-              ? ((p - recentPrices[idx - 1]) / recentPrices[idx - 1]) * 100
-              : 0
+        const recentPricesForVol = allPricesForCalc.slice(-10); // Use last 10 for volatility
+        const pricePercentChanges = recentPricesForVol
+          .map((p, idx, arr) =>
+            idx > 0 ? ((p - arr[idx - 1]) / arr[idx - 1]) * 100 : 0
           )
           .slice(1);
 
         const mean =
-          pricePercentChanges.reduce((sum, change) => sum + change, 0) /
-          pricePercentChanges.length;
+          pricePercentChanges.length > 0
+            ? pricePercentChanges.reduce((sum, change) => sum + change, 0) /
+              pricePercentChanges.length
+            : 0;
         const squaredDiffs = pricePercentChanges.map((change) =>
           Math.pow(change - mean, 2)
         );
         const variance =
-          squaredDiffs.reduce((sum, diff) => sum + diff, 0) /
-          squaredDiffs.length;
+          squaredDiffs.length > 0
+            ? squaredDiffs.reduce((sum, diff) => sum + diff, 0) /
+              squaredDiffs.length
+            : 0;
         const volatility = Math.sqrt(variance);
 
-        // Calculate moving average
+        // Calculate moving average (e.g., 5-period)
+        const recentPricesForMA = allPricesForCalc.slice(-5);
         const movingAverage =
-          recentPrices.reduce((sum, p) => sum + p, 0) / recentPrices.length;
+          recentPricesForMA.reduce((sum, p) => sum + p, 0) /
+          recentPricesForMA.length;
 
         const newDataPoint = {
           time: new Date().toLocaleTimeString(),
           price: newPrice,
-          rsi,
-          volatility,
+          rsi: isNaN(rsi) ? 50 : rsi, // Default if NaN
+          volatility: isNaN(volatility) ? 0 : volatility, // Default if NaN
           movingAverage,
         };
 
@@ -296,7 +306,7 @@ const DataAnalyticsDashboard = () => {
           text: "Indicators",
         },
         min: 0,
-        max: 100,
+        // max: 100, // RSI is 0-100, but volatility can be different. Consider dynamic max or separate axes.
         grid: {
           drawOnChartArea: false,
           color: "rgba(255, 255, 255, 0.1)",
@@ -480,7 +490,7 @@ const DataAnalyticsDashboard = () => {
                     ⏳
                   </div>
                   <p className="text-gray-400 text-sm sm:text-base md:text-lg">
-                    Loading chart data...
+                    Loading chart data or no metrics selected...
                   </p>
                 </div>
               </div>

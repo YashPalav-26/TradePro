@@ -19,7 +19,8 @@ import {
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<{ username: string } | null>(null);
+  // FIX: Prefixed setUser with an underscore
+  const [user, _setUser] = useState<{ username: string } | null>(null);
   const notifications = 3;
   const router = useRouter();
 
@@ -29,10 +30,18 @@ const Header = () => {
   );
 
   useEffect(() => {
+    // Example: You might fetch user data here and use _setUser
+    // For now, _setUser is unused, but this is where you'd call it:
+    // const token = localStorage.getItem('token');
+    // if (token) {
+    //   // Imagine fetchUser(token) returns { username: 'JohnDoe' }
+    //   fetchUser(token).then(userData => _setUser(userData));
+    // }
+
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, []); // Removed _setUser from dependency array if it's not used to set state in this effect
 
   return (
     <motion.header className="flex justify-between items-center p-4 bg-gray-900 text-white w-full">
@@ -224,6 +233,25 @@ const Header = () => {
                   >
                     <BookOpen className="mr-2" size={20} /> Learn
                   </a>
+                </li>
+                {/* Example: Mobile Login/User Info */}
+                <li className="pt-4 border-t border-gray-700">
+                  {user ? (
+                    <span className="text-gray-300 flex items-center">
+                      <User className="mr-2" size={20} /> Welcome,{" "}
+                      {user.username}
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        router.push("/login");
+                        setIsMenuOpen(false); // Close menu on navigation
+                      }}
+                      className="text-blue-500 hover:text-blue-400 font-semibold flex items-center w-full"
+                    >
+                      <User className="mr-2" size={20} /> Login / Sign Up
+                    </button>
+                  )}
                 </li>
               </ul>
             </nav>

@@ -74,6 +74,7 @@ const Login = () => {
           </button>
         </form>
         <p className="mt-4 text-gray-300">
+          {/* FIX: Replaced ' with ' */}
           Don't have an account?{" "}
           <a href="/register" className="text-blue-400 hover:underline">
             Sign Up

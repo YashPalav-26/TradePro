@@ -430,7 +430,9 @@ const BackTesting = ({ historicalData = [] }: BackTestingProps) => {
         monthlyReturns,
       });
     } catch (error) {
-      setErrors(["An error occurred during backtesting. Please try again."]);
+      setErrors([
+        "An error occurred during backtesting. Please try again." + error,
+      ]);
     } finally {
       setIsLoading(false);
     }

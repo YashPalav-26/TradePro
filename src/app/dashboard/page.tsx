@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
 import {
   TrendingUp,
-  X,
+  // X, // Removed X as it's not used in this file
   ArrowUpRight,
   ArrowDownRight,
   Plus,
@@ -14,7 +14,6 @@ import {
   DollarSign,
   Activity,
   PlusSquare,
-  // Star icon is now primarily managed by AddToWatchlistButton
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
@@ -28,12 +27,7 @@ import ActualWatchlistSidebar, {
 import PortfolioSidebarComponent, {
   PortfolioItem,
 } from "@/components/PortfolioSidebar";
-
-export const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 },
-};
+import { fadeInUp } from "@/lib/animation";
 
 // UPDATED StockCardProps
 interface StockCardProps {
@@ -161,7 +155,7 @@ const MarketIndices: React.FC<MarketIndicesProps> = ({
       setMarketData((prev) =>
         prev.map((index) => {
           const delta = (Math.random() * 2 - 1) * (index.value * 0.001);
-          const pct = (delta / index.value) * 100;
+          const pct = index.value !== 0 ? (delta / index.value) * 100 : 0;
           const newValue = index.value + delta;
           return {
             name: index.name,
@@ -267,7 +261,7 @@ const StockCard: React.FC<StockCardProps> = ({
   useEffect(() => {
     const interval = setInterval(() => {
       const delta = (Math.random() * 2 - 1) * (price * 0.01);
-      const pct = (delta / price) * 100;
+      const pct = price !== 0 ? (delta / price) * 100 : 0;
       setPrice((prev) => Math.max(0.01, prev + delta));
       setChange(delta);
       setPercentChange(pct);
@@ -591,19 +585,17 @@ const NewsFeed = () => {
       return [...prevArticles].sort(() => Math.random() - 0.5);
     });
   }, []);
-  useEffect(() => {
-    shuffleArticles();
-  }, [shuffleArticles]);
 
   useEffect(() => {
+    shuffleArticles();
     const intervalId = setInterval(() => {
       shuffleArticles();
-    }, 5000);
+    }, 5000); // Refresh every 5 seconds
 
     return () => {
       clearInterval(intervalId);
     };
-  }, [shuffleArticles]);
+  }, [shuffleArticles]); // Only re-run if shuffleArticles changes (which it won't after initial memoization)
 
   return (
     <motion.div {...fadeInUp} className="my-6 sm:my-8 px-2 sm:px-0">
@@ -650,15 +642,8 @@ const EnhancedTradeProDashboard: React.FC = () => {
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [token, setToken] = useState<string | null>(null);
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    setToken(savedToken);
-    if (savedToken) {
-      fetchUserAssets(savedToken);
-    }
-  }, []);
-
-  const fetchUserAssets = async (authToken: string) => {
+  // useCallback for fetchUserAssets as it's used in useEffect
+  const fetchUserAssets = useCallback(async (authToken: string) => {
     try {
       const response = await axios.get(
         "http://localhost:5000/api/auth/fetch-assets",
@@ -724,23 +709,32 @@ const EnhancedTradeProDashboard: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching user assets:", error);
-      setWatchlist([]);
-      setPortfolio([]);
+      setWatchlist([]); // Reset on error
+      setPortfolio([]); // Reset on error
     }
-  };
+  }, []); // Empty dependency array as it doesn't depend on component state/props
 
-  const saveUserAssets = async () => {
+  useEffect(() => {
+    const savedToken = localStorage.getItem("token");
+    setToken(savedToken);
+    if (savedToken) {
+      fetchUserAssets(savedToken);
+    }
+  }, [fetchUserAssets]); // Added fetchUserAssets to dependency array
+
+  // FIX 2: Wrapped saveUserAssets in useCallback
+  const saveUserAssets = useCallback(async () => {
     if (!token) return;
     try {
       await axios.post(
         "http://localhost:5000/api/auth/save-assets",
-        { watchlist, portfolio },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { watchlist, portfolio }, // These are dependencies
+        { headers: { Authorization: `Bearer ${token}` } } // token is a dependency
       );
     } catch (error) {
       console.error("Error saving assets:", error);
     }
-  };
+  }, [token, watchlist, portfolio]); // Dependencies of saveUserAssets
 
   useEffect(() => {
     if (token) {
@@ -749,7 +743,8 @@ const EnhancedTradeProDashboard: React.FC = () => {
       }, 1500);
       return () => clearTimeout(handler);
     }
-  }, [watchlist, portfolio, token]);
+    // FIX 2: Added saveUserAssets to dependency array
+  }, [watchlist, portfolio, token, saveUserAssets]);
 
   const addToWatchlist = (item: WatchlistItem) => {
     setWatchlist((prev) => {
@@ -776,8 +771,8 @@ const EnhancedTradeProDashboard: React.FC = () => {
             const newQuantity = p.quantity + 1;
             const newTotalInvested = p.totalInvested + stockToAdd.price;
             const newPurchasePrice = newTotalInvested / newQuantity;
-            const newCurrentPrice = stockToAdd.price;
-            const newCurrentValue = newCurrentPrice * newQuantity;
+            const newCurrentPriceVal = stockToAdd.price; // Renamed for clarity
+            const newCurrentValue = newCurrentPriceVal * newQuantity;
             const newProfitLoss = newCurrentValue - newTotalInvested;
             const newProfitLossPercent =
               newTotalInvested > 0
@@ -788,7 +783,7 @@ const EnhancedTradeProDashboard: React.FC = () => {
               quantity: newQuantity,
               totalInvested: newTotalInvested,
               purchasePrice: newPurchasePrice,
-              currentPrice: newCurrentPrice,
+              currentPrice: newCurrentPriceVal,
               currentValue: newCurrentValue,
               profitLoss: newProfitLoss,
               profitLossPercent: newProfitLossPercent,
@@ -845,51 +840,73 @@ const EnhancedTradeProDashboard: React.FC = () => {
     type: "buy" | "sell",
     transactionPrice: number
   ) => {
-    setPortfolio((prevPortfolio) =>
-      prevPortfolio
-        .map((stock) => {
-          if (stock.name === name) {
-            let newQuantity = stock.quantity;
-            let newTotalInvested = stock.totalInvested;
-            let newPurchasePrice = stock.purchasePrice;
-            let newCurrentPrice = transactionPrice;
+    setPortfolio(
+      (prevPortfolio) =>
+        prevPortfolio
+          .map((stock) => {
+            if (stock.name === name) {
+              let newQuantity = stock.quantity;
+              let newTotalInvested = stock.totalInvested;
+              let newPurchasePrice = stock.purchasePrice;
+              // FIX 3: Changed 'let' to 'const'
+              const newCurrentPrice = transactionPrice;
 
-            if (type === "buy") {
-              newQuantity += 1;
-              newTotalInvested += transactionPrice;
-              newPurchasePrice = newTotalInvested / newQuantity;
-            } else if (type === "sell" && stock.quantity > 0) {
-              newQuantity -= 1;
-              if (newQuantity > 0) {
-                newTotalInvested = stock.purchasePrice * newQuantity;
+              if (type === "buy") {
+                newQuantity += 1;
+                newTotalInvested += transactionPrice;
+                if (newQuantity > 0)
+                  newPurchasePrice = newTotalInvested / newQuantity;
+                else newPurchasePrice = 0;
+              } else if (type === "sell" && stock.quantity > 0) {
+                newQuantity -= 1;
+                if (newQuantity > 0) {
+                  // Keep existing purchase price if some shares remain,
+                  // total invested is reduced by the cost basis of shares sold
+                  // This is a simplification; true cost basis tracking is more complex (FIFO, LIFO, Avg Cost)
+                  // For simplicity, let's assume avg cost basis is maintained when selling partially
+                  newTotalInvested = stock.purchasePrice * newQuantity;
+                } else {
+                  newTotalInvested = 0; // All sold, so invested is 0
+                }
               } else {
-                newTotalInvested = 0;
+                return stock; // No change if trying to sell 0 quantity or unknown type
               }
-            } else {
-              return stock;
+
+              if (type === "sell" && newQuantity < 0) return null as any; // Should not happen if stock.quantity > 0 checked
+
+              // If all shares are sold, effectively remove the item.
+              // The filter below will handle this if newQuantity is 0 for a sell.
+              if (type === "sell" && newQuantity === 0) {
+                // Optionally, you could return null here and filter it out,
+                // or adjust the item to have 0 quantity and other values reflect that.
+                // For now, let's keep it but with 0 quantity.
+                // The .filter below will remove it if you `return null;`
+              }
+
+              const currentValue = newCurrentPrice * newQuantity;
+              const profitLoss = currentValue - newTotalInvested;
+              const profitLossPercent =
+                newTotalInvested > 0
+                  ? (profitLoss / newTotalInvested) * 100
+                  : 0;
+
+              return {
+                ...stock,
+                quantity: newQuantity,
+                totalInvested: newQuantity > 0 ? newTotalInvested : 0, // totalInvested should be 0 if quantity is 0
+                purchasePrice: newQuantity > 0 ? newPurchasePrice : 0, // purchasePrice can be 0 if no shares
+                currentPrice: newCurrentPrice,
+                currentValue,
+                profitLoss,
+                profitLossPercent,
+              };
             }
-
-            if (type === "sell" && newQuantity <= 0) return null as any;
-
-            const currentValue = newCurrentPrice * newQuantity;
-            const profitLoss = currentValue - newTotalInvested;
-            const profitLossPercent =
-              newTotalInvested > 0 ? (profitLoss / newTotalInvested) * 100 : 0;
-
-            return {
-              ...stock,
-              quantity: newQuantity,
-              totalInvested: newTotalInvested,
-              purchasePrice: newPurchasePrice,
-              currentPrice: newCurrentPrice,
-              currentValue,
-              profitLoss,
-              profitLossPercent,
-            };
-          }
-          return stock;
-        })
-        .filter((stock): stock is PortfolioItem => stock !== null)
+            return stock;
+          })
+          .filter(
+            (stock): stock is PortfolioItem =>
+              stock !== null && stock.quantity > 0
+          ) // Also filter out items with 0 quantity after selling all
     );
   };
 

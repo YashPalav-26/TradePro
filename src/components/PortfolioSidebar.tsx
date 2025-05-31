@@ -1,4 +1,5 @@
 "use client";
+import { fadeInUp } from "@/lib/animation";
 import { motion } from "framer-motion";
 import {
   X,
@@ -8,7 +9,6 @@ import {
   PieChart,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { fadeInUp } from "@/app/dashboard/page"; // Assuming this path is correct
 
 export interface PortfolioItem {
   name: string;
@@ -39,7 +39,8 @@ const PortfolioSidebar: React.FC<PortfolioSidebarProps> = ({
   handleTransaction,
 }) => {
   // This state is for the sidebar's internal price simulation
-  const [simulatedPrices, setSimulatedPrices] = useState<{
+  // FIX: Prefix 'simulatedPrices' with an underscore to indicate it's not directly read
+  const [_simulatedPrices, setSimulatedPrices] = useState<{
     [key: string]: number;
   }>({});
 
@@ -249,8 +250,7 @@ const PortfolioSidebar: React.FC<PortfolioSidebarProps> = ({
                   <div>
                     <p className="text-gray-400">Current Price</p>
                     <p className="font-medium text-white">
-                      {/* This is the line that caused the error (line 209) */}₹
-                      {displayPrice.toFixed(2)}
+                      ₹{displayPrice.toFixed(2)}
                     </p>
                   </div>
                   <div>

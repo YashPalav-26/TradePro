@@ -219,7 +219,8 @@ const TradingBot = () => {
 
   useEffect(() => {
     let realizedPL = 0;
-    let buyStack: { price: number; quantity: number }[] = [];
+    // FIX: Changed 'let' to 'const' for buyStack
+    const buyStack: { price: number; quantity: number }[] = [];
     for (const trade of trades) {
       if (trade.type === "BUY") {
         buyStack.push({ price: trade.price, quantity: trade.quantity });
