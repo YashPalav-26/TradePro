@@ -9,7 +9,7 @@ import {
   DollarSign,
   PieChart,
 } from "lucide-react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export interface PortfolioItem {
   name: string;
