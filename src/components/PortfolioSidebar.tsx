@@ -1,3 +1,4 @@
+// src/components/PortfolioSidebar.tsx
 "use client";
 import { fadeInUp } from "@/lib/animation";
 import { motion } from "framer-motion";
@@ -8,7 +9,7 @@ import {
   DollarSign,
   PieChart,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 export interface PortfolioItem {
   name: string;
@@ -32,79 +33,124 @@ interface PortfolioSidebarProps {
   ) => void;
 }
 
-const PortfolioSidebar: React.FC<PortfolioSidebarProps> = ({
+const PortfolioSidebarComponent: React.FC<PortfolioSidebarProps> = ({
   portfolio,
   remove,
-  updatePrice,
-  handleTransaction,
+  updatePrice, // Assumed to be memoized in parent
+  handleTransaction, // Assumed to be memoized in parent
 }) => {
-  // This state is for the sidebar's internal price simulation
-  // FIX: Prefix 'simulatedPrices' with an underscore to indicate it's not directly read
-  const [_simulatedPrices, setSimulatedPrices] = useState<{
-    [key: string]: number;
-  }>({});
+  // Local state for simulated prices. This is ONLY for the visual effect.
+  // The source of truth for actual current prices is the `portfolio` prop.
+  const [displayPrices, setDisplayPrices] = useState<{ [key: string]: number }>(
+    {}
+  );
 
+  // Ref to track if the initial display prices have been set from the portfolio prop
+  const initialSyncDone = useRef(false);
+
+  // --- EFFECT 1: Synchronize displayPrices with portfolio prop ---
+  // This effect ensures that our local displayPrices are initialized from
+  // and updated by the parent's portfolio data.
   useEffect(() => {
-    // Initialize or update simulatedPrices when the portfolio prop changes.
-    // This ensures that new items or items with updated currentPrice from parent
-    // are reflected in the simulation's base.
-    if (portfolio.length > 0) {
-      const initialSimPrices: { [key: string]: number } = {};
+    // console.log("EFFECT 1: Syncing displayPrices with portfolio prop", portfolio);
+    const newDisplayPrices: { [key: string]: number } = {};
+    let changesMade = false;
+
+    portfolio.forEach((item) => {
+      const currentPropPrice =
+        typeof item.currentPrice === "number" ? item.currentPrice : 0;
+      newDisplayPrices[item.name] = currentPropPrice;
+      if (displayPrices[item.name] !== currentPropPrice) {
+        changesMade = true;
+      }
+    });
+
+    // If the portfolio items themselves changed (e.g., item added/removed)
+    if (
+      Object.keys(newDisplayPrices).length !== Object.keys(displayPrices).length
+    ) {
+      changesMade = true;
+    }
+
+    if (changesMade) {
+      // console.log("EFFECT 1: Updating displayPrices from prop:", newDisplayPrices);
+      setDisplayPrices(newDisplayPrices);
+    }
+    initialSyncDone.current = true; // Mark that an attempt to sync has occurred
+  }, [portfolio]); // Dependency: Only the portfolio prop from parent
+
+  // --- EFFECT 2: Interval for simulating price fluctuations for DISPLAY ONLY ---
+  // This effect updates the local `displayPrices` for visual purposes.
+  // It then calls `updatePrice` to notify the parent of these *simulated* changes.
+  useEffect(() => {
+    if (!initialSyncDone.current || portfolio.length === 0) {
+      // console.log("EFFECT 2: Interval - Skipping, initial sync not done or no portfolio.");
+      return; // Don't run interval if not synced or portfolio is empty
+    }
+
+    // console.log("EFFECT 2: Interval - Setting up simulation interval.");
+    const intervalId = setInterval(() => {
+      // Create a *new* object for the next state to ensure React detects a change
+      const nextDisplayPrices: { [key: string]: number } = {};
+      let pricesChangedInSim = false;
+
       portfolio.forEach((item) => {
-        // Use item.currentPrice from prop as the base for simulation.
-        // Default to 0 if it's not a valid number (though parent should ensure it is).
-        initialSimPrices[item.name] =
-          typeof item.currentPrice === "number" ? item.currentPrice : 0;
+        // Iterate based on the current portfolio prop
+        const basePrice =
+          displayPrices[item.name] !== undefined
+            ? displayPrices[item.name] // Use current display price as base for simulation
+            : typeof item.currentPrice === "number"
+            ? item.currentPrice
+            : 0; // Fallback to prop price
+
+        const numericBasePrice = typeof basePrice === "number" ? basePrice : 0;
+        const randomFactor = (Math.random() * 2 - 1) * 0.005; // Smaller fluctuation (+/- 0.5%)
+        const newSimulatedPrice = Math.max(
+          numericBasePrice * (1 + randomFactor),
+          0.01
+        );
+
+        nextDisplayPrices[item.name] = newSimulatedPrice;
+        if (displayPrices[item.name] !== newSimulatedPrice) {
+          pricesChangedInSim = true;
+        }
       });
-      setSimulatedPrices(initialSimPrices);
-    } else {
-      setSimulatedPrices({}); // Clear if portfolio is empty
-    }
 
-    // Only set up interval if there's a portfolio to work on
-    if (portfolio.length === 0) {
-      return;
-    }
+      if (pricesChangedInSim) {
+        // console.log("EFFECT 2: Interval - Simulated prices changed:", nextDisplayPrices);
+        setDisplayPrices(nextDisplayPrices); // Update local display prices
 
-    const interval = setInterval(() => {
-      setSimulatedPrices((prevSimPrices) => {
-        const newSimPrices = { ...prevSimPrices };
-        // Iterate over the current portfolio items from the prop
-        // to ensure we are simulating prices for all relevant stocks.
-        portfolio.forEach((item) => {
-          const basePrice = prevSimPrices[item.name];
-
-          // Ensure basePrice is a number to prevent NaN issues.
-          // If an item is new and somehow not in prevSimPrices yet, initialize it.
-          const numericBasePrice =
-            typeof basePrice === "number"
-              ? basePrice
-              : typeof item.currentPrice === "number"
-              ? item.currentPrice
-              : 0;
-
-          const change = (Math.random() * 2 - 1) * 0.05; // ±5% max change
-          const newPriceCandidate = numericBasePrice * (1 + change);
-          newSimPrices[item.name] = Math.max(newPriceCandidate, 0.01); // Ensure price doesn't go below 0.01
-
-          // Notify parent of the simulated price change
-          updatePrice(item.name, newSimPrices[item.name]);
+        // Propagate these *simulated* changes to the parent
+        Object.entries(nextDisplayPrices).forEach(([name, newSimPrice]) => {
+          const parentItem = portfolio.find((p) => p.name === name);
+          // IMPORTANT: Only call updatePrice if the new simulated price is different
+          // from what the PARENT currently holds. This is the key to prevent loops.
+          if (parentItem && parentItem.currentPrice !== newSimPrice) {
+            // console.log(`EFFECT 2: Interval - Calling updatePrice for ${name} to ${newSimPrice}`);
+            updatePrice(name, newSimPrice);
+          }
         });
-        return newSimPrices;
-      });
-    }, 2000);
+      }
+    }, 2500); // Simulation interval
 
-    return () => clearInterval(interval);
-  }, [portfolio, updatePrice]); // Rerun effect if portfolio or updatePrice callback changes
+    return () => {
+      // console.log("EFFECT 2: Interval - Clearing simulation interval.");
+      clearInterval(intervalId);
+    };
+    // Dependencies:
+    // - `portfolio`: To know which items to simulate for. If portfolio items change (add/remove), restart interval.
+    // - `displayPrices`: The simulation bases off the current display prices.
+    // - `updatePrice`: The stable function to call the parent.
+  }, [portfolio, displayPrices, updatePrice]);
 
-  // Calculate portfolio totals using item.currentPrice directly from props for accuracy
+  // --- JSX Calculation Setup ---
   const portfolioStats = portfolio.reduce(
     (acc, item) => {
+      // ALWAYS use item.currentPrice from the prop (parent's state) for financial calculations
       const safeCurrentPrice =
         typeof item.currentPrice === "number" ? item.currentPrice : 0;
       const itemCurrentValue = safeCurrentPrice * item.quantity;
       const itemProfitLoss = itemCurrentValue - item.totalInvested;
-
       return {
         totalInvested: acc.totalInvested + item.totalInvested,
         currentValue: acc.currentValue + itemCurrentValue,
@@ -126,8 +172,7 @@ const PortfolioSidebar: React.FC<PortfolioSidebarProps> = ({
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold flex items-center">
-          <DollarSign className="mr-2 text-blue-500" size={20} />
-          Portfolio
+          <DollarSign className="mr-2 text-blue-500" size={20} /> Portfolio
         </h3>
         <PieChart className="text-gray-400" size={16} />
       </div>
@@ -138,6 +183,7 @@ const PortfolioSidebar: React.FC<PortfolioSidebarProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
+          {/* ... Portfolio Stats JSX (same as yours) ... */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-gray-400">Total Invested</p>
@@ -195,30 +241,29 @@ const PortfolioSidebar: React.FC<PortfolioSidebarProps> = ({
       ) : (
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {portfolio.map((item) => {
-            // Use item.currentPrice from prop for display, ensuring it's a number.
-            // This is the most up-to-date value from the parent component.
-            const displayPrice =
-              typeof item.currentPrice === "number" ? item.currentPrice : 0;
-            const displayPurchasePrice =
-              typeof item.purchasePrice === "number" ? item.purchasePrice : 0;
-            const displayTotalInvested =
-              typeof item.totalInvested === "number" ? item.totalInvested : 0;
+            // For DISPLAY, use the local displayPrices.
+            // For financial CALCULATIONS and TRANSACTIONS, use item.currentPrice from the prop.
+            const priceForDisplay =
+              displayPrices[item.name] !== undefined
+                ? displayPrices[item.name]
+                : item.currentPrice; // Fallback to prop price
 
-            // Recalculate these based on the safe displayPrice for consistent display
-            const itemCurrentValue = displayPrice * item.quantity;
-            const itemProfitLoss = itemCurrentValue - displayTotalInvested;
-            const itemProfitLossPercent =
-              displayTotalInvested > 0
-                ? (itemProfitLoss / displayTotalInvested) * 100
+            const actualCurrentPriceFromProp = item.currentPrice;
+            const itemCurrentValueUsingActual =
+              actualCurrentPriceFromProp * item.quantity;
+            const itemProfitLossUsingActual =
+              itemCurrentValueUsingActual - item.totalInvested;
+            const itemProfitLossPercentUsingActual =
+              item.totalInvested > 0
+                ? (itemProfitLossUsingActual / item.totalInvested) * 100
                 : 0;
-
             const allocation =
               portfolioStats.currentValue > 0
-                ? (itemCurrentValue / portfolioStats.currentValue) * 100
+                ? (itemCurrentValueUsingActual / portfolioStats.currentValue) *
+                  100
                 : 0;
-
-            // For transaction actions, use the most current price available (from prop).
-            const priceForTransaction = displayPrice;
+            // Price for transaction MUST come from the parent's data (prop)
+            const priceForTransaction = actualCurrentPriceFromProp;
 
             return (
               <motion.div
@@ -245,55 +290,64 @@ const PortfolioSidebar: React.FC<PortfolioSidebarProps> = ({
                     <X size={16} />
                   </button>
                 </div>
-
                 <div className="grid grid-cols-2 gap-2 text-xs mb-3">
                   <div>
                     <p className="text-gray-400">Current Price</p>
                     <p className="font-medium text-white">
-                      ₹{displayPrice.toFixed(2)}
+                      ₹{priceForDisplay.toFixed(2)} {/* Use priceForDisplay */}
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-400">Avg. Buy Price</p>
                     <p className="font-medium text-white">
-                      ₹{displayPurchasePrice.toFixed(2)}
+                      ₹
+                      {(typeof item.purchasePrice === "number"
+                        ? item.purchasePrice
+                        : 0
+                      ).toFixed(2)}
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-400">Invested</p>
                     <p className="font-medium text-white">
-                      ₹{displayTotalInvested.toLocaleString("en-IN")}
+                      ₹
+                      {(typeof item.totalInvested === "number"
+                        ? item.totalInvested
+                        : 0
+                      ).toLocaleString("en-IN")}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-400">Current Value</p>
+                    <p className="text-gray-400">Current Value (Actual)</p>
                     <p className="font-medium text-white">
-                      ₹{itemCurrentValue.toLocaleString("en-IN")}
+                      ₹{itemCurrentValueUsingActual.toLocaleString("en-IN")}
                     </p>
                   </div>
                 </div>
-
                 <div className="mb-3">
-                  <p className="text-gray-400 text-xs">P&L</p>
+                  <p className="text-gray-400 text-xs">P&L (Actual)</p>
                   <div
                     className={`font-semibold text-sm flex items-center ${
-                      itemProfitLoss >= 0 ? "text-green-400" : "text-red-400"
+                      itemProfitLossUsingActual >= 0
+                        ? "text-green-400"
+                        : "text-red-400"
                     }`}
                   >
-                    {itemProfitLoss >= 0 ? (
+                    {/* ... P&L JSX (same as yours) ... */}
+                    {itemProfitLossUsingActual >= 0 ? (
                       <TrendingUp size={14} className="mr-1" />
                     ) : (
                       <TrendingDown size={14} className="mr-1" />
                     )}
                     ₹
-                    {Math.abs(itemProfitLoss).toLocaleString("en-IN", {
-                      maximumFractionDigits: 0,
-                    })}
-                    ({itemProfitLoss >= 0 ? "+" : ""}
-                    {itemProfitLossPercent.toFixed(2)}%)
+                    {Math.abs(itemProfitLossUsingActual).toLocaleString(
+                      "en-IN",
+                      { maximumFractionDigits: 0 }
+                    )}
+                    ({itemProfitLossUsingActual >= 0 ? "+" : ""}
+                    {itemProfitLossPercentUsingActual.toFixed(2)}%)
                   </div>
                 </div>
-
                 <div className="flex space-x-2">
                   <motion.button
                     onClick={() =>
@@ -325,5 +379,4 @@ const PortfolioSidebar: React.FC<PortfolioSidebarProps> = ({
     </motion.aside>
   );
 };
-
-export default PortfolioSidebar;
+export default PortfolioSidebarComponent;

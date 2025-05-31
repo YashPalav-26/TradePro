@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useCallback } from "react"; // Added useCallback
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
@@ -10,7 +10,7 @@ import {
   DollarSign,
   BarChart2,
 } from "lucide-react";
-import Header from "@/components/Header";
+import Header from "@/components/Header"; // Assuming Header component is correctly implemented
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -38,6 +38,8 @@ const Breadcrumb = ({ stock }) => (
 const generateRandomData = (currentValue, points) => {
   const historicalData = [["Time", "Low", "Open", "Close", "High"]];
   let baseForHistorical = currentValue;
+  if (points <= 0) return historicalData; // Guard against zero or negative points
+
   for (let i = 0; i < points; i++) {
     const time = new Date(
       Date.now() - (points - 1 - i) * 5000
@@ -47,27 +49,23 @@ const generateRandomData = (currentValue, points) => {
       second: "2-digit",
     });
     const fluctuationMagnitude = baseForHistorical * 0.001;
-    const open =
+    let open =
       baseForHistorical + (Math.random() * 10 - 5) * fluctuationMagnitude;
-    const close = open + (Math.random() * 10 - 5) * fluctuationMagnitude;
-    const low =
-      Math.min(open, close) - Math.random() * 5 * fluctuationMagnitude;
-    const high =
-      Math.max(open, close) + Math.random() * 5 * fluctuationMagnitude;
-    historicalData.push([
-      time,
-      Math.max(0.01, low),
-      Math.max(0.01, open),
-      Math.max(0.01, close),
-      Math.max(0.01, high),
-    ]);
+    let close = open + (Math.random() * 10 - 5) * fluctuationMagnitude;
+    let low = Math.min(open, close) - Math.random() * 5 * fluctuationMagnitude;
+    let high = Math.max(open, close) + Math.random() * 5 * fluctuationMagnitude;
+
+    open = Math.max(0.01, open);
+    close = Math.max(0.01, close);
+    low = Math.max(0.01, low);
+    high = Math.max(0.01, high);
+
+    historicalData.push([time, low, open, close, high]);
     baseForHistorical = close;
   }
   return historicalData;
 };
 
-// Mock Chart component
-// FIX: Changed `options: _unusedOptions` to `options: _` to correctly mark the options prop's value as unused
 const Chart = ({ chartType, width, height, data, options: _ }) => {
   const lastDataPoint = data && data.length > 1 ? data[data.length - 1] : null;
   const currentDisplayValue =
@@ -91,7 +89,6 @@ const Chart = ({ chartType, width, height, data, options: _ }) => {
   );
 };
 
-// Static version for initial state and non-hook contexts, defined outside StockChart
 function getDataPointsStatic(range) {
   switch (range) {
     case "5M":
@@ -113,109 +110,133 @@ const StockChart = ({ stock }) => {
   const [timeRange, setTimeRange] = useState("5M");
   const initialStockValue = 4253.71;
 
+  const [currentValue, setCurrentValue] = useState(initialStockValue);
   const [data, setData] = useState(() =>
     generateRandomData(initialStockValue, getDataPointsStatic(timeRange))
   );
-
-  const [currentValue, setCurrentValue] = useState(() => {
-    // Initialize currentValue from the initial data generated
-    const initialDataForCurrentValue = generateRandomData(
-      initialStockValue,
-      getDataPointsStatic(timeRange)
-    );
-    return initialDataForCurrentValue.length > 1
-      ? initialDataForCurrentValue[initialDataForCurrentValue.length - 1][3] // Close price of the last point
-      : initialStockValue;
-  });
-
   const [change, setChange] = useState({ value: 0, percentage: 0 });
 
   const getDataPoints = useCallback((range) => {
     return getDataPointsStatic(range);
   }, []);
 
+  // Effect 1: Handles regeneration of historical data when timeRange changes
   useEffect(() => {
+    // console.log("StockChart: Effect 1 (timeRange change) running. New timeRange:", timeRange, "Current live value:", currentValue);
     const points = getDataPoints(timeRange);
-    // When timeRange changes, we want to use the *current* live value as the base for new historical data
-    const newData = generateRandomData(currentValue, points);
-    setData(newData);
+    const newChartData = generateRandomData(currentValue, points); // Base new historical view on current live price
+    setData(newChartData);
 
-    if (newData.length > 1) {
-      const newCurrentFromGenerated = newData[newData.length - 1][3]; // Close of the last point of new data
-      // setCurrentValue(newCurrentFromGenerated); // No, this is for setting the "live" value.
-      // The "live" value is already currentValue.
-      // This effect is for displaying a historical range based on timeRange.
-
-      const initialValInNewData = newData[1][2]; // Open of the first data point in the new set
-      const changeVal = newCurrentFromGenerated - initialValInNewData;
+    // Calculate change based on this new historical window
+    if (
+      newChartData.length > 1 &&
+      newChartData[1] &&
+      typeof newChartData[1][2] === "number"
+    ) {
+      const firstOpenInWindow = newChartData[1][2];
+      const lastCloseInWindow = newChartData[newChartData.length - 1][3];
+      const changeVal = lastCloseInWindow - firstOpenInWindow;
       const changePercent =
-        initialValInNewData !== 0 ? (changeVal / initialValInNewData) * 100 : 0;
+        firstOpenInWindow !== 0 ? (changeVal / firstOpenInWindow) * 100 : 0;
       setChange({ value: changeVal, percentage: changePercent });
+    } else {
+      setChange({ value: 0, percentage: 0 }); // Reset if no valid data
     }
-  }, [timeRange, currentValue, getDataPoints]); // `currentValue` is needed if new historical data is based on it.
+  }, [timeRange, currentValue, getDataPoints]); // This will run if timeRange changes OR if currentValue changes.
+  // The latter means the historical view "rebases" on live price changes.
 
+  // Effect 2: Interval for simulating "live" price updates to currentValue
   useEffect(() => {
+    // console.log("StockChart: Effect 2 (live price ticker interval) setup.");
     const interval = setInterval(() => {
       setCurrentValue((prevLiveCurrentValue) => {
-        const randomPercentageChange = (Math.random() - 0.5) * 0.001;
+        const randomPercentageChange = (Math.random() - 0.5) * 0.0002; // Smaller, more realistic tick for live value
         const changeAmount = prevLiveCurrentValue * randomPercentageChange;
-        const newLiveCurrentValue = Math.max(
+        const newLiveValue = Math.max(
           0.01,
           prevLiveCurrentValue + changeAmount
         );
-
-        setData((prevChartData) => {
-          if (!prevChartData || prevChartData.length < 1) return prevChartData;
-
-          const newPointTime = new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          });
-
-          const lastBarInChart = prevChartData[prevChartData.length - 1];
-          const open = lastBarInChart ? lastBarInChart[3] : newLiveCurrentValue; // Open is previous chart close
-          const close = newLiveCurrentValue; // The new live value is the close of the new bar
-
-          const barFluctuationMag = close * 0.0005;
-          const low = Math.min(open, close) - Math.random() * barFluctuationMag;
-          const high =
-            Math.max(open, close) + Math.random() * barFluctuationMag;
-
-          const newSingleDataPoint = [
-            newPointTime,
-            Math.max(0.01, low),
-            Math.max(0.01, open),
-            Math.max(0.01, close),
-            Math.max(0.01, high),
-          ];
-
-          const dataWithoutHeader = prevChartData.slice(1);
-          // Add new point, then slice to maintain window size, then prepend header
-          const updatedContent = [...dataWithoutHeader, newSingleDataPoint];
-          return [
-            prevChartData[0],
-            ...updatedContent.slice(-getDataPoints(timeRange)),
-          ];
-        });
-
-        // Calculate change relative to the first data point currently displayed in the chart
-        if (data.length > 1 && data[1] && typeof data[1][2] === "number") {
-          const initialValForDisplayChange = data[1][2];
-          const changeVal = newLiveCurrentValue - initialValForDisplayChange;
-          const changePercent =
-            initialValForDisplayChange !== 0
-              ? (changeVal / initialValForDisplayChange) * 100
-              : 0;
-          setChange({ value: changeVal, percentage: changePercent });
-        }
-        return newLiveCurrentValue;
+        // console.log("StockChart: Interval updating currentValue to:", newLiveValue);
+        return newLiveValue;
       });
-    }, 5000);
+    }, 2000); // Update live price more frequently for simulation effect
 
-    return () => clearInterval(interval);
-  }, [timeRange, data, getDataPoints]); // `currentValue` is managed by setCurrentValue's callback, no need here.
-  // `data` is a dependency because setChange reads it.
+    return () => {
+      // console.log("StockChart: Effect 2 (live price ticker interval) cleanup.");
+      clearInterval(interval);
+    };
+  }, []); // This effect runs once to set up the interval. The interval updates currentValue.
+
+  // Effect 3: Updates the chart data array when the "live" currentValue changes
+  useEffect(() => {
+    // This effect reacts to the `currentValue` being updated by the interval in Effect 2.
+    // console.log("StockChart: Effect 3 (chart data update) running due to currentValue change:", currentValue);
+
+    setData((prevChartData) => {
+      if (!prevChartData || prevChartData.length === 0 || !prevChartData[0]) {
+        // Fallback if prevChartData is invalid - should ideally not happen with proper init
+        return generateRandomData(currentValue, getDataPoints(timeRange));
+      }
+
+      const newPointTime = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      const lastBarInChart = prevChartData[prevChartData.length - 1];
+      // The new bar's open is the close of the last bar in the chart, or current value if no last bar.
+      let open =
+        lastBarInChart && typeof lastBarInChart[3] === "number"
+          ? lastBarInChart[3]
+          : currentValue;
+      let close = currentValue; // The new "live" price is the close of this new bar.
+
+      // Ensure open, high, low, close make sense for a candle
+      let low = Math.min(open, close);
+      let high = Math.max(open, close);
+      const barFluctuationMag = close * 0.0001; // Very small fluctuation for the candle itself
+      low -= Math.random() * barFluctuationMag;
+      high += Math.random() * barFluctuationMag;
+
+      const newSingleDataPoint = [
+        newPointTime,
+        Math.max(0.01, low),
+        Math.max(0.01, open),
+        Math.max(0.01, close),
+        Math.max(0.01, high),
+      ];
+
+      const dataWithoutHeader = prevChartData.slice(1);
+      const updatedContent = [...dataWithoutHeader, newSingleDataPoint];
+
+      // Prepend header and then take the last N points for the current timeRange
+      return [
+        prevChartData[0],
+        ...updatedContent.slice(-getDataPoints(timeRange)),
+      ];
+    });
+
+    // The "change" displayed should always be relative to the start of the current `data` window
+    // This `data` is the one set by Effect 1 when timeRange changes, or appended to by this effect.
+    if (data.length > 1 && data[1] && typeof data[1][2] === "number") {
+      const firstOpenInDisplayedWindow = data[1][2];
+      const changeVal = currentValue - firstOpenInDisplayedWindow;
+      const changePercent =
+        firstOpenInDisplayedWindow !== 0
+          ? (changeVal / firstOpenInDisplayedWindow) * 100
+          : 0;
+      // console.log("StockChart: Effect 3 updating 'change' display:", { value: changeVal, percentage: changePercent });
+      setChange({ value: changeVal, percentage: changePercent });
+    }
+  }, [currentValue, timeRange, getDataPoints]); // Removed `data` from here to break a potential loop where
+  // `setData` in this effect triggers this effect again via `data` dependency.
+  // The `change` will be calculated based on the `data` state as of the *previous* render.
+  // This might cause a one-render lag in the `change` display relative to the chart,
+  // but should prevent the max depth error.
+  // If `data` *must* be a dep for `setChange` to be perfectly in sync,
+  // then the `currentValue` update and `setData` update logic needs to be
+  // even more carefully separated or batched.
 
   const chartOptions = useMemo(
     () => ({
@@ -237,11 +258,7 @@ const StockChart = ({ stock }) => {
         fallingColor: { strokeWidth: 0, fill: "#EF4444" },
         risingColor: { strokeWidth: 0, fill: "#10B981" },
       },
-      animation: {
-        startup: true,
-        duration: 1000,
-        easing: "out",
-      },
+      animation: { startup: true, duration: 1000, easing: "out" },
     }),
     []
   );
@@ -264,7 +281,7 @@ const StockChart = ({ stock }) => {
               }`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              key={change.value}
+              key={currentValue} // Animate when currentValue (and thus change) updates
             >
               {change.value >= 0 ? (
                 <ArrowUpRight size={16} className="mr-1" />
@@ -282,7 +299,7 @@ const StockChart = ({ stock }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <PlusCircle className="inline-block mr-1 md:mr-2" size={14} />
+            <PlusCircle className="inline-block mr-1 md:mr-2" size={14} />{" "}
             Create Alert
           </motion.button>
           <motion.button
@@ -290,8 +307,7 @@ const StockChart = ({ stock }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Eye className="inline-block mr-1 md:mr-2" size={14} />
-            Watchlist
+            <Eye className="inline-block mr-1 md:mr-2" size={14} /> Watchlist
           </motion.button>
         </div>
       </div>
@@ -300,7 +316,7 @@ const StockChart = ({ stock }) => {
         width="100%"
         height="300px"
         data={data}
-        options={chartOptions} // This prop is now handled as `options: _` in Chart definition
+        options={chartOptions}
       />
       <div className="flex justify-around md:justify-between mt-4 overflow-x-auto space-x-1">
         {["5M", "10M", "15M", "30M", "1H"].map((range) => (
@@ -315,14 +331,16 @@ const StockChart = ({ stock }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Clock size={12} className="mr-1" />
-            {range}
+            <Clock size={12} className="mr-1" /> {range}
           </motion.button>
         ))}
       </div>
     </motion.div>
   );
 };
+
+// --- OptionsTable, OpenInterest, StockDetailPage components remain the same as your last provided version ---
+// (Assuming they are correctly implemented and not causing this specific error)
 
 const OptionsTable = ({ stock }) => {
   const [options, setOptions] = useState([

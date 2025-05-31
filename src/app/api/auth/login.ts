@@ -5,26 +5,34 @@ import User from "@/backend/models/User";
 import connectDB from "@/backend/config/db";
 
 export async function POST(req: Request) {
-  await connectDB(); // Ensure database connection
-  const { email, password } = await req.json();
-
   try {
+    await connectDB(); // Ensure database connection
+
+    const { email, password } = await req.json();
+
+    // Check if the email or password is missing
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: "Email and password are required" },
+        { status: 400 }
+      );
+    }
+
     // Find the user by email (case-insensitive)
     const user = await User.findOne({ email: email.toLowerCase() }).select(
       "+password"
     );
+
     console.log("User Retrieved:", user); // Debugging Step
 
-    // If user is not found, return an error
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Compare the provided password with the hashed password in the database
+    // Compare the password with the hashed password
     const isMatch = await bcrypt.compare(password, user.password);
     console.log("Password Match:", isMatch); // Debugging Step
 
-    // If passwords do not match, return an error
     if (!isMatch) {
       return NextResponse.json(
         { error: "Invalid email or password" },
@@ -32,19 +40,29 @@ export async function POST(req: Request) {
       );
     }
 
+    // Ensure JWT secret is defined
+    if (!process.env.JWT_SECRET) {
+      console.error("🔥 Missing JWT_SECRET in environment variables");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
     // Generate a JWT token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, {
-      expiresIn: "7d", // Token expires in 7 days
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
     });
 
-    // Return a success response with the token and user details
     return NextResponse.json(
       { message: "Login successful", token, user },
       { status: 200 }
     );
   } catch (error: any) {
-    // Log the error and return a server error response
-    console.error("Login Error:", error.message);
-    return NextResponse.json({ error: "Login error" }, { status: 500 });
+    console.error("🔥 Login Error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
