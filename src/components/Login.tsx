@@ -11,28 +11,27 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); // Clear previous errors
+    setError("");
 
     try {
-      console.log("🔍 Sending login request...");
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        { email, password }
-      );
-      console.log("✅ Server Response:", response.data); // Debugging log
+      console.log("🔍 Sending login request to /api/auth/login ...");
+      const response = await axios.post("/api/auth/login", { email, password });
+      console.log("✅ Server Response:", response.data);
 
       if (response.status === 200 && response.data.token) {
         console.log("🔒 Storing token...");
-        localStorage.setItem("token", response.data.token); // Store token
+        localStorage.setItem("token", response.data.token);
         console.log("➡️ Redirecting to dashboard...");
-        router.push("/dashboard"); // Redirect after successful login
+        router.push("/dashboard");
       } else {
-        console.error("🚨 Unexpected response format:", response);
-        setError("Unexpected response from server.");
+        console.error(
+          "🚨 Unexpected response format (non-200 or missing token):",
+          response
+        );
+        setError(response.data?.error || "Login failed or token missing.");
       }
     } catch (err: any) {
       console.error("🔥 Login Error:", err.response?.data || err.message); // Debugging log
-      // More precise error message based on the server response
       setError(
         err.response?.data?.error ||
           "Invalid email or password. Please try again."
@@ -44,7 +43,7 @@ const Login = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-900">
       <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-96">
         <h2 className="text-white text-2xl mb-4">Login</h2>
-        {error && <p className="text-red-500">{error}</p>}
+        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}{" "}
         <form onSubmit={handleLogin} className="space-y-4">
           <input
             type="email"
@@ -70,7 +69,7 @@ const Login = () => {
           </button>
         </form>
         <p className="mt-4 text-gray-300">
-          Don&apos;t have an account?{" "}
+          Don't have an account?{" "}
           <a href="/register" className="text-blue-400 hover:underline">
             Sign Up
           </a>
