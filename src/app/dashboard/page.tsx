@@ -2,8 +2,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useCallback } from "react";
-// ... other imports ...
+import { useState, useEffect, useCallback, useRef } from "react"; // Added useRef
 import {
   TrendingUp,
   ArrowUpRight,
@@ -21,18 +20,20 @@ import Header from "@/components/Header";
 import axios from "axios";
 
 import ActualWatchlistSidebar, {
-  WatchlistItem,
+  WatchlistItem as ClientWatchlistItem, // Renamed for clarity
   AddToWatchlistButton,
 } from "@/components/WatchlistSideBar";
 
 import PortfolioSidebarComponent, {
-  PortfolioItem,
+  PortfolioItem as ClientPortfolioItem,
 } from "@/components/PortfolioSidebar";
 import { fadeInUp } from "@/lib/animation";
 
-type SentimentType = "Positive" | "Neutral" | "Negative";
-
-// ... (PRESET_NEWS, TabSection remain the same) ...
+// --- (Your existing type definitions: SentimentType, PRESET_NEWS, MarketIndexData can remain) ---
+// ... (PRESET_NEWS, TabSection, generateSentiment, MarketIndices, StockCard, etc. code from your snippet)
+// For brevity, I'll omit the unchanged components here. Just ensure their props are updated if needed.
+// The key is that they should call the new handler functions passed from this parent.
+// --- (Your existing type definitions: SentimentType, PRESET_NEWS, MarketIndexData can remain) ---
 const PRESET_NEWS = [
   {
     id: 1,
@@ -103,15 +104,15 @@ const TabSection: React.FC = () => {
     </motion.div>
   );
 };
-
+type SentimentType = "Positive" | "Neutral" | "Negative";
 const generateSentiment = (): SentimentType => {
   const sentiments: SentimentType[] = ["Positive", "Neutral", "Negative"];
   return sentiments[Math.floor(Math.random() * sentiments.length)];
 };
 
 interface MarketIndicesProps {
-  watchlist: WatchlistItem[];
-  onAddToWatchlist: (item: WatchlistItem) => void;
+  watchlist: ClientWatchlistItem[];
+  onAddToWatchlist: (item: ClientWatchlistItem) => void;
   onRemoveFromWatchlist: (name: string) => void;
 }
 
@@ -270,9 +271,13 @@ const MarketIndices: React.FC<MarketIndicesProps> = ({
 interface StockCardProps {
   name: string;
   initialPrice: number;
-  onAddToPortfolio: (item: WatchlistItem) => void;
-  watchlist: WatchlistItem[];
-  onAddToWatchlist: (item: WatchlistItem) => void;
+  onAddToPortfolio: (item: {
+    name: string;
+    price: number;
+    quantity: number;
+  }) => void; // Updated to include quantity
+  watchlist: ClientWatchlistItem[];
+  onAddToWatchlist: (item: ClientWatchlistItem) => void;
   onRemoveFromWatchlist: (name: string) => void;
 }
 
@@ -333,7 +338,8 @@ const StockCard: React.FC<StockCardProps> = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onAddToPortfolio({ name, price });
+            // When adding to portfolio, let's assume adding 1 share for simplicity
+            onAddToPortfolio({ name, price, quantity: 1 });
           }}
           className="p-1.5 sm:p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full transition-colors flex items-center justify-center"
           title="Add to Portfolio"
@@ -392,12 +398,14 @@ const StockCard: React.FC<StockCardProps> = ({
     </motion.div>
   );
 };
-
-// ... (MostBought, ProductsAndTools, TopGainers, TopByMarketCap remain the same structurally) ...
 interface MostBoughtProps {
-  onAddToPortfolio: (item: WatchlistItem) => void;
-  watchlist: WatchlistItem[];
-  onAddToWatchlist: (item: WatchlistItem) => void;
+  onAddToPortfolio: (item: {
+    name: string;
+    price: number;
+    quantity: number;
+  }) => void; // Updated
+  watchlist: ClientWatchlistItem[];
+  onAddToWatchlist: (item: ClientWatchlistItem) => void;
   onRemoveFromWatchlist: (name: string) => void;
 }
 const MostBought: React.FC<MostBoughtProps> = ({
@@ -492,9 +500,13 @@ const ProductsAndTools = () => {
   );
 };
 interface TopGainersProps {
-  onAddToPortfolio: (item: WatchlistItem) => void;
-  watchlist: WatchlistItem[];
-  onAddToWatchlist: (item: WatchlistItem) => void;
+  onAddToPortfolio: (item: {
+    name: string;
+    price: number;
+    quantity: number;
+  }) => void; // Updated
+  watchlist: ClientWatchlistItem[];
+  onAddToWatchlist: (item: ClientWatchlistItem) => void;
   onRemoveFromWatchlist: (name: string) => void;
 }
 const TopGainers: React.FC<TopGainersProps> = ({
@@ -716,249 +728,432 @@ const NewsFeed = () => {
     </motion.div>
   );
 };
+// --- TYPES FOR BACKEND DATA (should align with IUser.ts if possible, or map accordingly) ---
+// These are the types that match your MongoDB schema for watchlist/portfolio items
+interface DbWatchlistItem {
+  name: string;
+  price?: number; // Assuming price in DB is purchase/last known price
+}
+
+interface DbPortfolioItem {
+  name: string;
+  price?: number; // Assuming price in DB is average purchase price
+  quantity?: number;
+}
 
 const EnhancedTradeProDashboard: React.FC = () => {
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+  const [watchlist, setWatchlist] = useState<ClientWatchlistItem[]>([]);
+  const [portfolio, setPortfolio] = useState<ClientPortfolioItem[]>([]);
   const [token, setToken] = useState<string | null>(null);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(true);
+  const [assetError, setAssetError] = useState<string | null>(null);
+  const router = useRouter();
 
-  // --- All your useCallback wrapped functions (fetchUserAssets, saveUserAssets, addToWatchlist, etc.) remain unchanged here ---
-  const fetchUserAssets = useCallback(async (authToken: string) => {
-    try {
-      const response = await axios.get(
-        "http://localhost:5000/api/auth/fetch-assets",
-        { headers: { Authorization: `Bearer ${authToken}` } }
-      );
-      if (response.status === 200) {
-        setWatchlist(
-          response.data.watchlist
-            ?.map((item: any) => ({
-              name: item.name,
-              price: typeof item.price === "number" ? item.price : 0,
-            }))
-            .filter(
-              (item: WatchlistItem) =>
-                item.name && typeof item.price === "number"
-            ) || []
-        );
-        setPortfolio(
-          response.data.portfolio
-            ?.map((item: any) => {
-              const currentPrice =
-                typeof item.currentPrice === "number"
-                  ? item.currentPrice
-                  : typeof item.purchasePrice === "number"
-                  ? item.purchasePrice
-                  : 0;
-              const quantity =
-                typeof item.quantity === "number" ? item.quantity : 0;
-              const purchasePrice =
-                typeof item.purchasePrice === "number" ? item.purchasePrice : 0;
-              const totalInvested =
-                typeof item.totalInvested === "number"
-                  ? item.totalInvested
-                  : purchasePrice * quantity;
-              const currentValue = currentPrice * quantity;
-              const profitLoss = currentValue - totalInvested;
-              const profitLossPercent =
-                totalInvested > 0 ? (profitLoss / totalInvested) * 100 : 0;
-              return {
-                name: item.name,
-                currentPrice,
-                quantity,
-                purchasePrice,
-                totalInvested,
-                currentValue,
-                profitLoss,
-                profitLossPercent,
-              };
-            })
-            .filter((item: PortfolioItem) => item.name) || []
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching user assets:", error);
-      setWatchlist([]);
-      setPortfolio([]);
+  // Ref to track if initial fetch is done to avoid multiple saves on mount
+  const initialFetchDone = useRef(false);
+
+  const getToken = useCallback(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("token");
     }
+    return null;
   }, []);
+
+  // --- Debounced Save Function ---
+  const debouncedSaveUserAssets = useCallback(
+    // Basic debounce implementation
+    (
+      currentWatchlist: ClientWatchlistItem[],
+      currentPortfolio: ClientPortfolioItem[],
+      authToken: string
+    ) => {
+      // Clear any existing timer
+      if ((debouncedSaveUserAssets as any).timer) {
+        clearTimeout((debouncedSaveUserAssets as any).timer);
+      }
+      // Set a new timer
+      (debouncedSaveUserAssets as any).timer = setTimeout(async () => {
+        if (!authToken) {
+          console.log("Save skipped: No token for debounced save.");
+          return;
+        }
+        console.log("Debounced: Saving assets to backend...");
+        try {
+          // Map ClientPortfolioItem to DbPortfolioItem for saving
+          const portfolioToSave = currentPortfolio.map((p) => ({
+            name: p.name,
+            // Decide what 'price' means in DB. For now, using purchasePrice.
+            // If your DB schema expects currentPrice for some reason, adjust.
+            price: p.purchasePrice,
+            quantity: p.quantity,
+          }));
+
+          await axios.post(
+            "/api/assets", // Using relative path for Next.js API route
+            { watchlist: currentWatchlist, portfolio: portfolioToSave },
+            { headers: { Authorization: `Bearer ${authToken}` } }
+          );
+          console.log("Debounced: Assets saved successfully.");
+        } catch (error) {
+          console.error("Debounced: Error saving assets:", error);
+          // Optionally set an error state here to notify the user
+        }
+      }, 1500); // Debounce delay: 1.5 seconds
+    },
+    []
+  );
+
+  // --- Fetch User Assets ---
+  const fetchUserAssets = useCallback(
+    async (authToken: string) => {
+      if (!authToken) {
+        setIsLoadingAssets(false);
+        setAssetError("Not authenticated.");
+        return;
+      }
+      setIsLoadingAssets(true);
+      setAssetError(null);
+      console.log("Fetching user assets with token...");
+      try {
+        const response = await axios.get(
+          "/api/assets", // Using relative path
+          { headers: { Authorization: `Bearer ${authToken}` } }
+        );
+
+        if (response.status === 200) {
+          console.log("Fetched assets:", response.data);
+          // Map DbWatchlistItem to ClientWatchlistItem
+          setWatchlist(
+            response.data.watchlist
+              ?.map((item: DbWatchlistItem) => ({
+                name: item.name,
+                price: typeof item.price === "number" ? item.price : 0, // Default price if undefined
+              }))
+              .filter(
+                (item: ClientWatchlistItem): item is ClientWatchlistItem =>
+                  item.name && typeof item.price === "number"
+              ) || []
+          );
+
+          // Map DbPortfolioItem to ClientPortfolioItem (complex mapping with calculations)
+          setPortfolio(
+            response.data.portfolio
+              ?.map((item: DbPortfolioItem) => {
+                const quantity =
+                  typeof item.quantity === "number" ? item.quantity : 0;
+                // Assuming 'price' from DB is the average purchase price
+                const purchasePrice =
+                  typeof item.price === "number" ? item.price : 0;
+                // Current price needs to come from somewhere else (e.g., market data feed, or a default)
+                // For now, let's assume currentPrice might be same as purchasePrice initially, or needs updating
+                const currentPrice = purchasePrice; // Placeholder - this should be updated by market data later
+
+                const totalInvested = purchasePrice * quantity;
+                const currentValue = currentPrice * quantity; // Based on placeholder currentPrice
+                const profitLoss = currentValue - totalInvested;
+                const profitLossPercent =
+                  totalInvested > 0 ? (profitLoss / totalInvested) * 100 : 0;
+
+                return {
+                  name: item.name,
+                  currentPrice: currentPrice, // This will be updated by price simulation/API
+                  quantity: quantity,
+                  purchasePrice: purchasePrice,
+                  totalInvested: totalInvested,
+                  currentValue: currentValue,
+                  profitLoss: profitLoss,
+                  profitLossPercent: profitLossPercent,
+                };
+              })
+              .filter(
+                (item: ClientPortfolioItem): item is ClientPortfolioItem =>
+                  item.name && typeof item.quantity === "number"
+              ) || []
+          );
+          initialFetchDone.current = true; // Mark fetch as done
+        }
+      } catch (error: any) {
+        console.error(
+          "Error fetching user assets:",
+          error.response?.data || error.message
+        );
+        setAssetError(error.response?.data?.error || "Failed to load assets.");
+        setWatchlist([]); // Clear on error
+        setPortfolio([]); // Clear on error
+        if (error.response?.status === 401) {
+          localStorage.removeItem("token"); // Clear invalid token
+          router.push("/login"); // Redirect to login
+        }
+      } finally {
+        setIsLoadingAssets(false);
+      }
+    },
+    [router]
+  ); // Added router dependency
+
+  // Effect to get token and fetch initial data
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
+    const savedToken = getToken();
     if (savedToken) {
       setToken(savedToken);
-    }
-  }, []);
-  useEffect(() => {
-    if (token) {
-      fetchUserAssets(token);
-    }
-  }, [token, fetchUserAssets]);
-  const saveUserAssets = useCallback(async () => {
-    if (!token) return;
-    try {
-      await axios.post(
-        "http://localhost:5000/api/auth/save-assets",
-        { watchlist, portfolio },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } catch (error) {
-      console.error("Error saving assets:", error);
-    }
-  }, [token, watchlist, portfolio]);
-  useEffect(() => {
-    if (token) {
-      const handler = setTimeout(() => {
-        saveUserAssets();
-      }, 1500);
-      return () => clearTimeout(handler);
-    }
-  }, [watchlist, portfolio, token, saveUserAssets]);
-  const addToWatchlist = useCallback((item: WatchlistItem) => {
-    setWatchlist((prev) =>
-      prev.some((stock) => stock.name === item.name) ? prev : [...prev, item]
-    );
-  }, []);
-  const removeFromWatchlist = useCallback((name: string) => {
-    setWatchlist((prev) => prev.filter((stock) => stock.name !== name));
-  }, []);
-  const addToPortfolio = useCallback((stockToAdd: WatchlistItem) => {
-    setPortfolio((prevPortfolio) => {
-      const existingStock = prevPortfolio.find(
-        (p) => p.name === stockToAdd.name
-      );
-      if (existingStock) {
-        return prevPortfolio.map((p) =>
-          p.name === stockToAdd.name
-            ? (() => {
-                const newQuantity = p.quantity + 1;
-                const newTotalInvested = p.totalInvested + stockToAdd.price;
-                const newPurchasePrice =
-                  newQuantity > 0 ? newTotalInvested / newQuantity : 0;
-                const newCurrentPriceVal = stockToAdd.price;
-                const newCurrentValue = newCurrentPriceVal * newQuantity;
-                const newProfitLoss = newCurrentValue - newTotalInvested;
-                const newProfitLossPercent =
-                  newTotalInvested > 0
-                    ? (newProfitLoss / newTotalInvested) * 100
-                    : 0;
-                return {
-                  ...p,
-                  quantity: newQuantity,
-                  totalInvested: newTotalInvested,
-                  purchasePrice: newPurchasePrice,
-                  currentPrice: newCurrentPriceVal,
-                  currentValue: newCurrentValue,
-                  profitLoss: newProfitLoss,
-                  profitLossPercent: newProfitLossPercent,
-                };
-              })()
-            : p
-        );
-      } else {
-        return [
-          ...prevPortfolio,
-          {
-            name: stockToAdd.name,
-            currentPrice: stockToAdd.price,
-            quantity: 1,
-            purchasePrice: stockToAdd.price,
-            totalInvested: stockToAdd.price,
-            currentValue: stockToAdd.price,
-            profitLoss: 0,
-            profitLossPercent: 0,
-          },
-        ];
+      if (!initialFetchDone.current) {
+        // Fetch only if not already fetched
+        fetchUserAssets(savedToken);
       }
-    });
-  }, []);
-  const removeFromPortfolio = useCallback((name: string) => {
-    setPortfolio((prev) => prev.filter((i) => i.name !== name));
-  }, []);
-  const updatePrice = useCallback((name: string, newPrice: number) => {
-    setPortfolio((prevPortfolio) =>
-      prevPortfolio.map((stock) => {
-        if (stock.name === name) {
-          const updatedStock = { ...stock, currentPrice: newPrice };
-          updatedStock.currentValue = newPrice * updatedStock.quantity;
-          updatedStock.profitLoss =
-            updatedStock.currentValue - updatedStock.totalInvested;
-          updatedStock.profitLossPercent =
-            updatedStock.totalInvested > 0
-              ? (updatedStock.profitLoss / updatedStock.totalInvested) * 100
-              : 0;
-          return updatedStock;
-        }
-        return stock;
-      })
-    );
-    setWatchlist((prevWatchlist) =>
-      prevWatchlist.map((stock) =>
-        stock.name === name ? { ...stock, price: newPrice } : stock
-      )
-    );
-  }, []);
-  const handleTransaction = useCallback(
-    (name: string, type: "buy" | "sell", transactionPrice: number) => {
-      setPortfolio((prevPortfolio) =>
-        prevPortfolio
-          .map((stock) => {
-            if (stock.name === name) {
-              let newQuantity = stock.quantity;
-              let newTotalInvested = stock.totalInvested;
-              let newPurchasePrice = stock.purchasePrice;
-              const newCurrentPrice = transactionPrice;
-              if (type === "buy") {
-                newQuantity += 1;
-                newTotalInvested += transactionPrice;
-                if (newQuantity > 0)
-                  newPurchasePrice = newTotalInvested / newQuantity;
-                else newPurchasePrice = 0;
-              } else if (type === "sell" && stock.quantity > 0) {
-                newQuantity -= 1;
-                newTotalInvested =
-                  newQuantity > 0 ? stock.purchasePrice * newQuantity : 0;
-              } else {
-                return stock;
-              }
-              if (type === "sell" && newQuantity < 0) return null;
-              const currentValue = newCurrentPrice * newQuantity;
+    } else {
+      setIsLoadingAssets(false);
+      router.push("/login"); // No token, redirect to login
+    }
+  }, [getToken, fetchUserAssets, router]);
+
+  // --- Watchlist Handlers ---
+  const addToWatchlist = useCallback(
+    (item: ClientWatchlistItem) => {
+      setWatchlist((prev) => {
+        if (prev.some((stock) => stock.name === item.name)) return prev;
+        const newWatchlist = [...prev, item];
+        if (token && initialFetchDone.current)
+          debouncedSaveUserAssets(newWatchlist, portfolio, token);
+        return newWatchlist;
+      });
+    },
+    [token, portfolio, debouncedSaveUserAssets]
+  );
+
+  const removeFromWatchlist = useCallback(
+    (name: string) => {
+      setWatchlist((prev) => {
+        const newWatchlist = prev.filter((stock) => stock.name !== name);
+        if (token && initialFetchDone.current)
+          debouncedSaveUserAssets(newWatchlist, portfolio, token);
+        return newWatchlist;
+      });
+    },
+    [token, portfolio, debouncedSaveUserAssets]
+  );
+
+  // --- Portfolio Handlers (Modified from your provided code) ---
+  const addToPortfolio = useCallback(
+    (stockToAdd: { name: string; price: number; quantity: number }) => {
+      setPortfolio((prevPortfolio) => {
+        const existingStockIndex = prevPortfolio.findIndex(
+          (p) => p.name === stockToAdd.name
+        );
+        let updatedPortfolio;
+
+        if (existingStockIndex > -1) {
+          // Stock exists, update quantity and average purchase price
+          updatedPortfolio = prevPortfolio.map((p, index) => {
+            if (index === existingStockIndex) {
+              const newQuantity = p.quantity + stockToAdd.quantity;
+              const newTotalInvested =
+                p.totalInvested + stockToAdd.price * stockToAdd.quantity;
+              const newPurchasePrice =
+                newQuantity > 0 ? newTotalInvested / newQuantity : 0;
+              const currentPrice = stockToAdd.price; // Assume transaction price is current price
+              const currentValue = currentPrice * newQuantity;
               const profitLoss = currentValue - newTotalInvested;
               const profitLossPercent =
                 newTotalInvested > 0
                   ? (profitLoss / newTotalInvested) * 100
                   : 0;
               return {
-                ...stock,
+                ...p,
                 quantity: newQuantity,
-                totalInvested: newQuantity > 0 ? newTotalInvested : 0,
-                purchasePrice: newQuantity > 0 ? newPurchasePrice : 0,
-                currentPrice: newCurrentPrice,
+                totalInvested: newTotalInvested,
+                purchasePrice: newPurchasePrice,
+                currentPrice: currentPrice,
                 currentValue,
                 profitLoss,
                 profitLossPercent,
               };
             }
-            return stock;
-          })
-          .filter(
-            (stock): stock is PortfolioItem =>
-              stock !== null && stock.quantity > 0
-          )
+            return p;
+          });
+        } else {
+          // New stock
+          const totalInvested = stockToAdd.price * stockToAdd.quantity;
+          updatedPortfolio = [
+            ...prevPortfolio,
+            {
+              name: stockToAdd.name,
+              currentPrice: stockToAdd.price,
+              quantity: stockToAdd.quantity,
+              purchasePrice: stockToAdd.price,
+              totalInvested: totalInvested,
+              currentValue: totalInvested, // Initially, current value is total invested
+              profitLoss: 0,
+              profitLossPercent: 0,
+            },
+          ];
+        }
+        if (token && initialFetchDone.current)
+          debouncedSaveUserAssets(watchlist, updatedPortfolio, token);
+        return updatedPortfolio;
+      });
+    },
+    [token, watchlist, debouncedSaveUserAssets]
+  );
+
+  const removeFromPortfolio = useCallback(
+    (name: string) => {
+      setPortfolio((prev) => {
+        const newPortfolio = prev.filter((i) => i.name !== name);
+        if (token && initialFetchDone.current)
+          debouncedSaveUserAssets(watchlist, newPortfolio, token);
+        return newPortfolio;
+      });
+    },
+    [token, watchlist, debouncedSaveUserAssets]
+  );
+
+  const updatePrice = useCallback(
+    (name: string, newPrice: number) => {
+      setPortfolio((prevPortfolio) => {
+        const updatedPortfolio = prevPortfolio.map((stock) => {
+          if (stock.name === name) {
+            const updatedStock = { ...stock, currentPrice: newPrice };
+            updatedStock.currentValue = newPrice * updatedStock.quantity;
+            updatedStock.profitLoss =
+              updatedStock.currentValue - updatedStock.totalInvested;
+            updatedStock.profitLossPercent =
+              updatedStock.totalInvested > 0
+                ? (updatedStock.profitLoss / updatedStock.totalInvested) * 100
+                : 0;
+            return updatedStock;
+          }
+          return stock;
+        });
+        // Note: Saving on every simulated price update can be very frequent.
+        // Consider if this is desired or if saves should be less frequent / triggered differently for price updates.
+        // For now, let's NOT save on every simulated price update from PortfolioSidebar to avoid too many writes.
+        // if (token && initialFetchDone.current) debouncedSaveUserAssets(watchlist, updatedPortfolio, token);
+        return updatedPortfolio;
+      });
+
+      setWatchlist((prevWatchlist) =>
+        prevWatchlist.map((stock) =>
+          stock.name === name ? { ...stock, price: newPrice } : stock
+        )
       );
     },
-    []
+    [token, watchlist, debouncedSaveUserAssets]
+  ); // Removed debouncedSaveUserAssets if not saving on price sim
+
+  const handleTransaction = useCallback(
+    (
+      name: string,
+      type: "buy" | "sell",
+      transactionPrice: number,
+      shares: number = 1
+    ) => {
+      // Added shares param
+      setPortfolio((prevPortfolio) => {
+        const itemIndex = prevPortfolio.findIndex((p) => p.name === name);
+        let updatedPortfolio = [...prevPortfolio];
+
+        if (itemIndex === -1 && type === "sell") {
+          console.warn("Cannot sell stock not in portfolio:", name);
+          return prevPortfolio; // No change
+        }
+
+        if (itemIndex > -1) {
+          // Existing stock
+          const stock = updatedPortfolio[itemIndex];
+          let newQuantity = stock.quantity;
+          let newTotalInvested = stock.totalInvested;
+          let newPurchasePrice = stock.purchasePrice;
+
+          if (type === "buy") {
+            newQuantity += shares;
+            newTotalInvested += transactionPrice * shares;
+            newPurchasePrice =
+              newQuantity > 0 ? newTotalInvested / newQuantity : 0;
+          } else {
+            // Sell
+            if (shares > stock.quantity) {
+              console.warn("Cannot sell more shares than owned for:", name);
+              return prevPortfolio; // No change
+            }
+            newQuantity -= shares;
+            // Adjust total invested proportionally on sell, assuming average cost basis
+            if (newQuantity > 0) {
+              newTotalInvested = newPurchasePrice * newQuantity;
+            } else {
+              newTotalInvested = 0; // Sold all
+            }
+          }
+
+          if (newQuantity === 0 && type === "sell") {
+            updatedPortfolio.splice(itemIndex, 1); // Remove if all sold
+          } else {
+            const currentValue = transactionPrice * newQuantity;
+            const profitLoss = currentValue - newTotalInvested;
+            const profitLossPercent =
+              newTotalInvested > 0 ? (profitLoss / newTotalInvested) * 100 : 0;
+            updatedPortfolio[itemIndex] = {
+              ...stock,
+              quantity: newQuantity,
+              totalInvested: newTotalInvested,
+              purchasePrice: newPurchasePrice, // Stays the same on sell, re-averaged on buy
+              currentPrice: transactionPrice, // Update current price to transaction price
+              currentValue,
+              profitLoss,
+              profitLossPercent,
+            };
+          }
+        } else if (type === "buy") {
+          // New stock being bought
+          const newTotalInvested = transactionPrice * shares;
+          updatedPortfolio.push({
+            name,
+            currentPrice: transactionPrice,
+            quantity: shares,
+            purchasePrice: transactionPrice,
+            totalInvested: newTotalInvested,
+            currentValue: newTotalInvested,
+            profitLoss: 0,
+            profitLossPercent: 0,
+          });
+        }
+        if (token && initialFetchDone.current)
+          debouncedSaveUserAssets(watchlist, updatedPortfolio, token);
+        return updatedPortfolio;
+      });
+    },
+    [token, watchlist, debouncedSaveUserAssets]
   );
-  // --- End of useCallback wrapped functions ---
+
+  if (isLoadingAssets && !initialFetchDone.current) {
+    // Show loading only on initial fetch
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
+        Loading dashboard data...
+      </div>
+    );
+  }
+  if (!token && !isLoadingAssets) {
+    // Handled by redirect in useEffect, but as a fallback UI
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
+        Please login to view the dashboard.
+      </div>
+    );
+  }
+  if (assetError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-red-500">
+        Error: {assetError}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-900 min-h-screen text-gray-300 flex flex-col lg:flex-row relative">
-      {/* ActualWatchlistSidebar is for the left side */}
       <ActualWatchlistSidebar
         watchlist={watchlist}
         remove={removeFromWatchlist}
       />
-
-      {/* Main content area (center/right) */}
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
         <main className="container mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 flex-1 max-w-7xl">
@@ -969,43 +1164,45 @@ const EnhancedTradeProDashboard: React.FC = () => {
             onRemoveFromWatchlist={removeFromWatchlist}
           />
           <MostBought
-            onAddToPortfolio={addToPortfolio}
+            onAddToPortfolio={(item) =>
+              addToPortfolio({
+                name: item.name,
+                price: item.price,
+                quantity: 1,
+              })
+            } // Assuming add 1 quantity
             watchlist={watchlist}
             onAddToWatchlist={addToWatchlist}
             onRemoveFromWatchlist={removeFromWatchlist}
           />
           <ProductsAndTools />
           <TopGainers
-            onAddToPortfolio={addToPortfolio}
+            onAddToPortfolio={(item) =>
+              addToPortfolio({
+                name: item.name,
+                price: item.price,
+                quantity: 1,
+              })
+            } // Assuming add 1 quantity
             watchlist={watchlist}
             onAddToWatchlist={addToWatchlist}
             onRemoveFromWatchlist={removeFromWatchlist}
           />
-
-          {/* Portfolio Section - In Flow, Before NewsFeed */}
           <div className="my-6 sm:my-8 px-2 sm:px-0">
-            {" "}
-            {/* Standard section spacing and padding */}
             <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">
               My Portfolio
             </h2>
             <PortfolioSidebarComponent
               portfolio={portfolio}
               remove={removeFromPortfolio}
-              updatePrice={updatePrice}
+              updatePrice={updatePrice} // This updates display price, doesn't save to DB by default now
               handleTransaction={handleTransaction}
             />
           </div>
-
           <TopByMarketCap />
-
           <NewsFeed />
-          {/* Any other components that should come after NewsFeed */}
         </main>
       </div>
-
-      {/* NO fixed right sidebar for portfolio, as it's now in the main content flow */}
-      {/* NO separate mobile/tablet portfolio section at the very bottom, as it's handled above */}
     </div>
   );
 };
