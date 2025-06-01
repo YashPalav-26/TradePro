@@ -66,7 +66,7 @@ TradePro offers a comprehensive suite of simulated trading and analytical tools:
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/your-username/tradepro.git # Replace with your repo URL
+    git clone https://github.com/YashPalav-26/NullClassInternshipProject.git # Replace with your repo URL
     cd tradepro
     ```
 
