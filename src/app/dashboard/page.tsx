@@ -1,4 +1,3 @@
-// src/app/dashboard/page.tsx
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,11 +28,6 @@ import PortfolioSidebarComponent, {
 } from "@/components/PortfolioSidebar";
 import { fadeInUp } from "@/lib/animation";
 
-// --- (Your existing type definitions: SentimentType, PRESET_NEWS, MarketIndexData can remain) ---
-// ... (PRESET_NEWS, TabSection, generateSentiment, MarketIndices, StockCard, etc. code from your snippet)
-// For brevity, I'll omit the unchanged components here. Just ensure their props are updated if needed.
-// The key is that they should call the new handler functions passed from this parent.
-// --- (Your existing type definitions: SentimentType, PRESET_NEWS, MarketIndexData can remain) ---
 const PRESET_NEWS = [
   {
     id: 1,
@@ -323,7 +317,6 @@ const StockCard: React.FC<StockCardProps> = ({
       whileTap={{ scale: 0.95 }}
       onClick={() => router.push(`/dashboard/${name}`)}
     >
-      {/* ... buttons ... */}
       <div className="absolute top-2 right-2 z-10 flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-1">
         {" "}
         <div onClick={(e) => e.stopPropagation()}>
@@ -338,7 +331,7 @@ const StockCard: React.FC<StockCardProps> = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            // When adding to portfolio, let's assume adding 1 share for simplicity
+
             onAddToPortfolio({ name, price, quantity: 1 });
           }}
           className="p-1.5 sm:p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full transition-colors flex items-center justify-center"
@@ -353,18 +346,15 @@ const StockCard: React.FC<StockCardProps> = ({
       </h3>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-1 sm:space-y-0">
         <span className="text-base sm:text-lg text-white font-medium">
-          {
-            isClient
-              ? price.toLocaleString("en-IN", {
-                  // DEFER FORMATTING
-                  style: "currency",
-                  currency: "INR",
-                  maximumFractionDigits: 2,
-                })
-              : `₹${price.toFixed(2)}` /* Basic server fallback */
-          }
+          {isClient
+            ? price.toLocaleString("en-IN", {
+                style: "currency",
+                currency: "INR",
+                maximumFractionDigits: 2,
+              })
+            : `₹${price.toFixed(2)}`}
         </span>
-        {/* ... change display ... */}
+
         <motion.span
           key={`${name}-${change}`}
           initial={{ opacity: 0 }}
@@ -382,7 +372,7 @@ const StockCard: React.FC<StockCardProps> = ({
           {change.toFixed(2)} ({percentChange.toFixed(2)}%){" "}
         </motion.span>
       </div>
-      {/* ... sentiment display ... */}
+
       <motion.div
         className={`mt-2 text-xs sm:text-sm font-semibold ${
           sentiment === "Positive"
@@ -403,7 +393,7 @@ interface MostBoughtProps {
     name: string;
     price: number;
     quantity: number;
-  }) => void; // Updated
+  }) => void;
   watchlist: ClientWatchlistItem[];
   onAddToWatchlist: (item: ClientWatchlistItem) => void;
   onRemoveFromWatchlist: (name: string) => void;
@@ -673,14 +663,12 @@ const NewsFeed = () => {
 
   useEffect(() => {
     if (isClientForNews) {
-      // Only shuffle and start interval on client after mount
-      shuffleArticles(); // Initial shuffle on client side
+      shuffleArticles();
       const intervalId = setInterval(shuffleArticles, 5000);
       return () => clearInterval(intervalId);
     }
   }, [isClientForNews, shuffleArticles]);
 
-  // Render PRESET_NEWS directly if not client yet, or the shuffled articles if client
   const articlesToRender = isClientForNews ? articles : PRESET_NEWS;
 
   return (
@@ -689,7 +677,7 @@ const NewsFeed = () => {
         <h2 className="text-lg sm:text-xl font-semibold text-white">
           Latest News
         </h2>
-        {isClientForNews && ( // Only show refresh button on client
+        {isClientForNews && (
           <motion.button
             onClick={shuffleArticles}
             className="text-blue-500 text-sm hover:underline flex items-center self-start sm:self-auto"
@@ -728,16 +716,15 @@ const NewsFeed = () => {
     </motion.div>
   );
 };
-// --- TYPES FOR BACKEND DATA (should align with IUser.ts if possible, or map accordingly) ---
-// These are the types that match your MongoDB schema for watchlist/portfolio items
+
 interface DbWatchlistItem {
   name: string;
-  price?: number; // Assuming price in DB is purchase/last known price
+  price?: number;
 }
 
 interface DbPortfolioItem {
   name: string;
-  price?: number; // Assuming price in DB is average purchase price
+  price?: number;
   quantity?: number;
 }
 
@@ -749,7 +736,6 @@ const EnhancedTradeProDashboard: React.FC = () => {
   const [assetError, setAssetError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Ref to track if initial fetch is done to avoid multiple saves on mount
   const initialFetchDone = useRef(false);
 
   const getToken = useCallback(() => {
@@ -759,9 +745,7 @@ const EnhancedTradeProDashboard: React.FC = () => {
     return null;
   }, []);
 
-  // --- Debounced Save Function ---
   const debouncedSaveUserAssets = useCallback(
-    // Basic debounce implementation
     (
       currentWatchlist: ClientWatchlistItem[],
       currentPortfolio: ClientPortfolioItem[],
@@ -779,31 +763,27 @@ const EnhancedTradeProDashboard: React.FC = () => {
         }
         console.log("Debounced: Saving assets to backend...");
         try {
-          // Map ClientPortfolioItem to DbPortfolioItem for saving
           const portfolioToSave = currentPortfolio.map((p) => ({
             name: p.name,
-            // Decide what 'price' means in DB. For now, using purchasePrice.
-            // If your DB schema expects currentPrice for some reason, adjust.
+
             price: p.purchasePrice,
             quantity: p.quantity,
           }));
 
           await axios.post(
-            "/api/assets", // Using relative path for Next.js API route
+            "/api/assets",
             { watchlist: currentWatchlist, portfolio: portfolioToSave },
             { headers: { Authorization: `Bearer ${authToken}` } }
           );
           console.log("Debounced: Assets saved successfully.");
         } catch (error) {
           console.error("Debounced: Error saving assets:", error);
-          // Optionally set an error state here to notify the user
         }
-      }, 1500); // Debounce delay: 1.5 seconds
+      }, 1500);
     },
     []
   );
 
-  // --- Fetch User Assets ---
   const fetchUserAssets = useCallback(
     async (authToken: string) => {
       if (!authToken) {
@@ -815,19 +795,18 @@ const EnhancedTradeProDashboard: React.FC = () => {
       setAssetError(null);
       console.log("Fetching user assets with token...");
       try {
-        const response = await axios.get(
-          "/api/assets", // Using relative path
-          { headers: { Authorization: `Bearer ${authToken}` } }
-        );
+        const response = await axios.get("/api/assets", {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
 
         if (response.status === 200) {
           console.log("Fetched assets:", response.data);
-          // Map DbWatchlistItem to ClientWatchlistItem
+
           setWatchlist(
             response.data.watchlist
               ?.map((item: DbWatchlistItem) => ({
                 name: item.name,
-                price: typeof item.price === "number" ? item.price : 0, // Default price if undefined
+                price: typeof item.price === "number" ? item.price : 0,
               }))
               .filter(
                 (item: ClientWatchlistItem): item is ClientWatchlistItem =>
@@ -835,28 +814,26 @@ const EnhancedTradeProDashboard: React.FC = () => {
               ) || []
           );
 
-          // Map DbPortfolioItem to ClientPortfolioItem (complex mapping with calculations)
           setPortfolio(
             response.data.portfolio
               ?.map((item: DbPortfolioItem) => {
                 const quantity =
                   typeof item.quantity === "number" ? item.quantity : 0;
-                // Assuming 'price' from DB is the average purchase price
+
                 const purchasePrice =
                   typeof item.price === "number" ? item.price : 0;
-                // Current price needs to come from somewhere else (e.g., market data feed, or a default)
-                // For now, let's assume currentPrice might be same as purchasePrice initially, or needs updating
-                const currentPrice = purchasePrice; // Placeholder - this should be updated by market data later
+
+                const currentPrice = purchasePrice;
 
                 const totalInvested = purchasePrice * quantity;
-                const currentValue = currentPrice * quantity; // Based on placeholder currentPrice
+                const currentValue = currentPrice * quantity;
                 const profitLoss = currentValue - totalInvested;
                 const profitLossPercent =
                   totalInvested > 0 ? (profitLoss / totalInvested) * 100 : 0;
 
                 return {
                   name: item.name,
-                  currentPrice: currentPrice, // This will be updated by price simulation/API
+                  currentPrice: currentPrice,
                   quantity: quantity,
                   purchasePrice: purchasePrice,
                   totalInvested: totalInvested,
@@ -870,7 +847,7 @@ const EnhancedTradeProDashboard: React.FC = () => {
                   item.name && typeof item.quantity === "number"
               ) || []
           );
-          initialFetchDone.current = true; // Mark fetch as done
+          initialFetchDone.current = true;
         }
       } catch (error: any) {
         console.error(
@@ -889,24 +866,21 @@ const EnhancedTradeProDashboard: React.FC = () => {
       }
     },
     [router]
-  ); // Added router dependency
+  );
 
-  // Effect to get token and fetch initial data
   useEffect(() => {
     const savedToken = getToken();
     if (savedToken) {
       setToken(savedToken);
       if (!initialFetchDone.current) {
-        // Fetch only if not already fetched
         fetchUserAssets(savedToken);
       }
     } else {
       setIsLoadingAssets(false);
-      router.push("/login"); // No token, redirect to login
+      router.push("/login");
     }
   }, [getToken, fetchUserAssets, router]);
 
-  // --- Watchlist Handlers ---
   const addToWatchlist = useCallback(
     (item: ClientWatchlistItem) => {
       setWatchlist((prev) => {
@@ -932,7 +906,6 @@ const EnhancedTradeProDashboard: React.FC = () => {
     [token, portfolio, debouncedSaveUserAssets]
   );
 
-  // --- Portfolio Handlers (Modified from your provided code) ---
   const addToPortfolio = useCallback(
     (stockToAdd: { name: string; price: number; quantity: number }) => {
       setPortfolio((prevPortfolio) => {
@@ -942,7 +915,6 @@ const EnhancedTradeProDashboard: React.FC = () => {
         let updatedPortfolio;
 
         if (existingStockIndex > -1) {
-          // Stock exists, update quantity and average purchase price
           updatedPortfolio = prevPortfolio.map((p, index) => {
             if (index === existingStockIndex) {
               const newQuantity = p.quantity + stockToAdd.quantity;
@@ -1024,10 +996,7 @@ const EnhancedTradeProDashboard: React.FC = () => {
           }
           return stock;
         });
-        // Note: Saving on every simulated price update can be very frequent.
-        // Consider if this is desired or if saves should be less frequent / triggered differently for price updates.
-        // For now, let's NOT save on every simulated price update from PortfolioSidebar to avoid too many writes.
-        // if (token && initialFetchDone.current) debouncedSaveUserAssets(watchlist, updatedPortfolio, token);
+
         return updatedPortfolio;
       });
 
@@ -1038,7 +1007,7 @@ const EnhancedTradeProDashboard: React.FC = () => {
       );
     },
     [token, watchlist, debouncedSaveUserAssets]
-  ); // Removed debouncedSaveUserAssets if not saving on price sim
+  );
 
   const handleTransaction = useCallback(
     (
@@ -1076,7 +1045,7 @@ const EnhancedTradeProDashboard: React.FC = () => {
               return prevPortfolio; // No change
             }
             newQuantity -= shares;
-            // Adjust total invested proportionally on sell, assuming average cost basis
+
             if (newQuantity > 0) {
               newTotalInvested = newPurchasePrice * newQuantity;
             } else {
@@ -1095,8 +1064,8 @@ const EnhancedTradeProDashboard: React.FC = () => {
               ...stock,
               quantity: newQuantity,
               totalInvested: newTotalInvested,
-              purchasePrice: newPurchasePrice, // Stays the same on sell, re-averaged on buy
-              currentPrice: transactionPrice, // Update current price to transaction price
+              purchasePrice: newPurchasePrice,
+              currentPrice: transactionPrice,
               currentValue,
               profitLoss,
               profitLossPercent,
@@ -1195,7 +1164,7 @@ const EnhancedTradeProDashboard: React.FC = () => {
             <PortfolioSidebarComponent
               portfolio={portfolio}
               remove={removeFromPortfolio}
-              updatePrice={updatePrice} // This updates display price, doesn't save to DB by default now
+              updatePrice={updatePrice}
               handleTransaction={handleTransaction}
             />
           </div>
