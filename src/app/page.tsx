@@ -11,11 +11,16 @@ import {
   TrendingUp,
   X,
   Zap,
+  Moon,
+  Sun,
+  Linkedin,
+  Twitter,
+  Instagram,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import { useRouter } from "next/navigation";
-import Image from "next/image"; // Import next/image
+import { useTheme } from "next-themes";
 
 const Animatedsection = ({ children }: any) => {
   const ref = useRef(null);
@@ -31,54 +36,58 @@ const Animatedsection = ({ children }: any) => {
     </motion.section>
   );
 };
+
 const FeatureBox = ({ icon, title, description, delay }: any) => {
-  const [ishovered, setishovered] = useState(false);
   return (
     <motion.div
-      whileHover={{
-        scale: 1.05,
-        boxShadow: "0 10px 40px rgba(59,130,246,0.3)",
-      }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay }}
-      onHoverStart={() => setishovered(true)}
-      onHoverEnd={() => setishovered(false)}
-      className="bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full relative overflow-hidden"
+      className="bg-card p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"
     >
-      <motion.div
-        animate={{ scale: ishovered ? 1.2 : 1, rotate: ishovered ? 360 : 0 }}
-        transition={{ duration: 0.3 }}
-        className="text-blue-500 mb-4 relative z-10"
-      >
-        {icon}
-      </motion.div>
-      <h3 className="text-xl font-semibold mb-2 text-white relative z-10">
+      <div className="text-primary mb-4">{icon}</div>
+      <h3 className="text-xl font-semibold mb-2 text-foreground">
         {title}
       </h3>
-      <p className="text-gray-300 mb-4 flex-grow relative z-10">
-        {description}
-      </p>
+      <p className="text-muted-foreground mb-4 flex-grow">{description}</p>
       <motion.button
         whileHover={{
           x: 5,
         }}
-        className="mt-auto text-blue-500 flex items-center text-sm font-medium relative z-10"
+        className="mt-auto text-primary flex items-center text-sm font-medium"
       >
         Learn More <ArrowRight className="ml-1" size={16} />
       </motion.button>
-      <motion.div
-        className="absolute inset-0 bg-blue-600 opacity-0"
-        animate={{ opacity: ishovered ? 0.1 : 0 }}
-        transition={{ duration: 0.3 }}
-      />
+    </motion.div>
+  );
+};
+
+const TestimonialCard = ({ quote, author, role, delay }: any) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay }}
+      className="bg-card p-6 rounded-xl shadow-lg flex flex-col justify-between h-full"
+    >
+      <p className="text-muted-foreground mb-4">"{quote}"</p>
+      <div>
+        <p className="font-semibold text-foreground">{author}</p>
+        <p className="text-sm text-muted-foreground">{role}</p>
+      </div>
     </motion.div>
   );
 };
 
 export default function Home() {
   const router = useRouter();
-  const containeref = useRef(null);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const tradingFeatures = [
     {
       icon: <Globe size={32} />,
@@ -118,23 +127,52 @@ export default function Home() {
     },
   ];
 
+  const testimonials = [
+    {
+      quote: "TradePro has revolutionized my trading strategy. The tools are intuitive and powerful, and the real-time data is a game-changer.",
+      author: "John Doe",
+      role: "Full-time Trader",
+    },
+    {
+      quote: "As a beginner, I was intimidated by trading. TradePro's educational resources and user-friendly interface made it easy for me to get started.",
+      author: "Jane Smith",
+      role: "New Investor",
+    },
+    {
+      quote: "The portfolio analysis tools are top-notch. I can easily track my investments and make informed decisions.",
+      author: "Samuel Green",
+      role: "Financial Analyst",
+    },
+  ];
+
   const [ismenuopen, setismenuopen] = useState(false);
+
+  const renderThemeChanger = () => {
+    if (!mounted) return null;
+
+    return (
+      <button
+        className="p-2 rounded-md hover:bg-accent"
+        onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      >
+        {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
+      </button>
+    );
+  };
+
   return (
-    <div
-      ref={containeref}
-      className="bg-gray-900 min-h-screen font-sans text-white"
-    >
+    <div className="bg-background min-h-screen font-sans text-foreground">
       <header className="container mx-auto px-4 py-6 flex justify-between items-center relative z-20">
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-3xl font-bold text-blue-500"
+          className="text-3xl font-bold text-primary"
         >
           TradePro
         </motion.div>
         <nav className="hidden md:block">
-          <ul className="flex space-x-6">
+          <ul className="flex space-x-6 items-center">
             {["Markets", "Trading", "Analysis", "Learn"].map((item, index) => (
               <motion.li
                 key={index}
@@ -142,32 +180,38 @@ export default function Home() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
               >
-                <span className="text-gray-300 hover:text-blue-500 transition-colors">
+                <span className="text-muted-foreground hover:text-primary transition-colors">
                   {item}
                 </span>
               </motion.li>
             ))}
           </ul>
         </nav>
-        <motion.button
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="hidden md:block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors transform hover:scale-105"
-          onClick={() => router.push("/login")}
-        >
-          Start Trading
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="md:hidden text-white"
-          onClick={() => setismenuopen(!ismenuopen)}
-        >
-          {ismenuopen ? <X size={24} /> : <Menu size={24} />}
-        </motion.button>
+        <div className="hidden md:flex items-center space-x-4">
+          {renderThemeChanger()}
+          <motion.button
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
+            onClick={() => router.push("/login")}
+          >
+            Start Trading
+          </motion.button>
+        </div>
+        <div className="md:hidden flex items-center">
+          {renderThemeChanger()}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="ml-4"
+            onClick={() => setismenuopen(!ismenuopen)}
+          >
+            {ismenuopen ? <X size={24} /> : <Menu size={24} />}
+          </motion.button>
+        </div>
       </header>
       {ismenuopen && (
         <motion.div
@@ -175,7 +219,7 @@ export default function Home() {
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.6 }}
-          className="md:hidden bg-gray-800 px-4 py-2"
+          className="md:hidden bg-card px-4 py-2"
         >
           <ul className="space-y-3">
             {["Markets", "Trading", "Analysis", "Learn"].map((item, index) => (
@@ -185,7 +229,7 @@ export default function Home() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
               >
-                <span className=" block text-gray-300 hover:text-blue-500 transition-colors py-2">
+                <span className=" block text-muted-foreground hover:text-primary transition-colors py-2">
                   {item}
                 </span>
               </motion.li>
@@ -197,7 +241,7 @@ export default function Home() {
             >
               <button
                 onClick={() => router.push("/login")}
-                className="w-full bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors transform hover:scale-105"
+                className="w-full bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
               >
                 Start Trading
               </button>
@@ -212,7 +256,7 @@ export default function Home() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-6xl font-bold mb-6"
+              className="text-6xl font-bold mb-6 text-foreground"
             >
               Trade Smarter, Not Harder
             </motion.h1>
@@ -220,10 +264,10 @@ export default function Home() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-2xl text-gray-400 mb-12"
+              className="text-2xl text-muted-foreground mb-12"
             >
-              Acess global markets with real-time data and advanced training
-              tool
+              Access global markets with real-time data and advanced trading
+              tools
             </motion.p>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -232,7 +276,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
               onClick={() => router.push("/register")}
-              className="bg-blue-600 text-white px-8 py-4 rounded-md text-xl hover:bg-blue-700 transition-colors flex items-center mx-auto"
+              className="bg-primary text-primary-foreground px-8 py-4 rounded-md text-xl hover:bg-primary/90 transition-colors flex items-center mx-auto"
             >
               Open Free Account <ArrowRight className="ml-2" />
             </motion.button>
@@ -241,164 +285,154 @@ export default function Home() {
 
         <Animatedsection>
           <div className="py-20">
-            <div className="grid md:grid-cols-2 gap-16 items-center">
-              <div>
-                <h2 className="text-4xl font-bold mb-8">
-                  Advanced Trading Tools
-                </h2>
-                <ul className="space-y-6">
-                  {[
-                    "Real-time market data",
-                    "Advanced charting",
-                    "Risk management tools",
-                  ].map((item, index) => (
-                    <motion.li
-                      whileHover={{ scale: 1.05, color: "#3B82f6" }}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.6, delay: index * 0.1 }}
-                      key={index}
-                      className="flex items-center text-gray-300 text-xl"
-                    >
-                      <BarChart2 className="mr-4 text-blue-500" size={28} />{" "}
-                      {item}
-                    </motion.li>
-                  ))}
-                </ul>
-              </div>
-              <motion.div
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8 }}
-                className="bg-gray-800 p-8 rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300 relative overflow-hidden group"
-              >
-                {/* FIX: Replaced <img> with <Image /> */}
-                <Image
-                  className="w-full rounded-xl object-cover"
-                  src="https://i.ibb.co/C1jWyk9/1.jpg"
-                  alt="Trading platform screenshot"
-                  width={800}
-                  height={600}
-                  priority
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-foreground mb-4">
+                Why Choose TradePro?
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                Experience the advantage of professional-grade trading tools
+                and resources.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {tradingFeatures.map((feature, index) => (
+                <FeatureBox
+                  key={index}
+                  icon={feature.icon}
+                  title={feature.title}
+                  description={feature.description}
+                  delay={index * 0.1}
                 />
-                <motion.div
-                  whileHover={{ opacity: 0.2 }}
-                  className="absolute inset-0 bg-blue-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                />
-              </motion.div>
+              ))}
             </div>
           </div>
         </Animatedsection>
 
         <Animatedsection>
           <div className="py-20">
-            <div className="grid md:grid-cols-2 gap-16 items-center">
-              <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8 }}
-                className="bg-gray-800 p-8 rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300 relative overflow-hidden group"
-              >
-                {/* FIX: Replaced <img> with <Image /> */}
-                <Image
-                  src="https://i.ibb.co/0K3ZTzt/2.jpg"
-                  alt="Market analysis feature"
-                  className="w-full rounded-xl object-cover"
-                  width={800}
-                  height={600}
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-foreground mb-4">
+                What Our Users Say
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                Thousands of traders trust TradePro to power their financial journey.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {testimonials.map((testimonial, index) => (
+                <TestimonialCard
+                  key={index}
+                  quote={testimonial.quote}
+                  author={testimonial.author}
+                  role={testimonial.role}
+                  delay={index * 0.1}
                 />
-                <motion.div
-                  className="absolute inset-0 bg-blue-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                  whileHover={{ opacity: 0.2 }}
-                />
-              </motion.div>
-              <div>
-                <h2 className="text-4xl font-bold mb-8">
-                  Market Analysis at Your Fingertips
-                </h2>
-                <p className="text-gray-300 text-xl mb-8">
-                  Get in-depth market analysis and make informed trading
-                  decisions.
-                </p>
-                <motion.div
-                  className="flex items-center bg-gray-800 p-6 rounded-xl relative overflow-hidden group"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <TrendingUp
-                    className="text-blue-500 mr-6 relative z-10"
-                    size={48}
-                  />
-                  <div className="relative z-10">
-                    <div className="text-5xl font-bold text-blue-500">500+</div>
-                    <p className="text-gray-300 text-xl">
-                      Global markets available for trading
-                    </p>
-                  </div>
-                  <motion.div
-                    className="absolute inset-0 bg-blue-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                    whileHover={{ opacity: 0.2 }}
-                  />
-                </motion.div>
+              ))}
+            </div>
+          </div>
+        </Animatedsection>
+
+        <Animatedsection>
+          <div className="py-20">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-foreground mb-4">
+                Get Started in 3 Easy Steps
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8 text-center">
+              <div className="flex flex-col items-center">
+                <div className="bg-primary text-primary-foreground rounded-full h-16 w-16 flex items-center justify-center text-2xl font-bold mb-4">
+                  1
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Create Account</h3>
+                <p className="text-muted-foreground">Sign up for a free account in minutes.</p>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="bg-primary text-primary-foreground rounded-full h-16 w-16 flex items-center justify-center text-2xl font-bold mb-4">
+                  2
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Fund Your Account</h3>
+                <p className="text-muted-foreground">Securely deposit funds to start trading.</p>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="bg-primary text-primary-foreground rounded-full h-16 w-16 flex items-center justify-center text-2xl font-bold mb-4">
+                  3
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Start Trading</h3>
+                <p className="text-muted-foreground">Access global markets and trade your favorite assets.</p>
               </div>
             </div>
           </div>
         </Animatedsection>
 
         <Animatedsection>
-          <div ref={containeref} className="bg-gray-900 py-20">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-4xl font-bold text-white mb-4">
-                  Why Choose TradePro?
-                </h2>
-                <p className="text-xl text-gray-300">
-                  Experience the advantage of professional-grade trading tools
-                  and resources.
-                </p>
-              </motion.div>
-              <div className="grid md:grid-cols-3 gap-8">
-                {tradingFeatures.map((feature, index) => (
-                  <FeatureBox
-                    key={index}
-                    icon={feature.icon}
-                    title={feature.title}
-                    description={feature.description}
-                    delay={index * 0.1}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </Animatedsection>
-
-        <Animatedsection>
-          <div className="bg-blue-600 rounded-2xl p-12 text-center py-12 relative overflow-hidden group">
-            <motion.div
-              className="absolute inset-0 bg-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              whileHover={{ opacity: 1 }}
-            />
-            <h2 className="text-4xl font-bold mb-6 relative z-10">
+          <div className="bg-card rounded-2xl p-12 text-center my-20">
+            <h2 className="text-4xl font-bold mb-6 text-foreground">
               Ready to Start Trading?
             </h2>
-            <p className="text-xl mb-8 relative z-10">
+            <p className="text-xl mb-8 text-muted-foreground">
               Join thousands of traders and start your journey to financial
               success.
             </p>
             <motion.button
-              className="bg-white text-blue-600 px-8 py-4 rounded-md text-xl font-bold hover:bg-gray-100 transition-colors relative z-10"
+              className="bg-primary text-primary-foreground px-8 py-4 rounded-md text-xl font-bold hover:bg-primary/90 transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => router.push("/register")}
             >
               Create Free Account
             </motion.button>
           </div>
         </Animatedsection>
       </main>
+
+      <footer className="bg-card py-8">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="font-semibold mb-4 text-foreground">TradePro</h3>
+              <p className="text-muted-foreground text-sm">
+                Trade Smarter, Not Harder.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4 text-foreground">Products</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">Stocks</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">Futures & Options</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">IPO</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">Mutual Funds</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4 text-foreground">Company</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">About Us</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">Pricing</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">Blog</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">Careers</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4 text-foreground">Social</h3>
+              <div className="flex space-x-4">
+                <a href="#" className="text-muted-foreground hover:text-primary">
+                  <Twitter />
+                </a>
+                <a href="#" className="text-muted-foreground hover:text-primary">
+                  <Linkedin />
+                </a>
+                <a href="#" className="text-muted-foreground hover:text-primary">
+                  <Instagram />
+                </a>
+              </div>
+            </div>
+          </div>
+          <div className="mt-8 pt-8 border-t border-border text-center text-muted-foreground text-sm">
+            <p>&copy; {new Date().getFullYear()} TradePro. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
