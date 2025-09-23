@@ -17,6 +17,8 @@
 # misc
 .DS_Store
 *.pem
+GEMINI.md
+bun.lock
 
 # debug
 npm-debug.log*
