@@ -21,17 +21,17 @@ const fadeInUp = {
 const Breadcrumb = ({ stock }) => (
   <motion.div
     {...fadeInUp}
-    className="flex items-center space-x-2 text-sm text-gray-400 my-4"
+    className="flex items-center space-x-2 text-sm text-muted-foreground my-6"
   >
-    <a href="/" className="hover:text-blue-500">
+    <a href="/" className="hover:text-primary transition-colors duration-200 font-medium">
       Home
     </a>
-    <span>/</span>
-    <a href="/dashboard" className="hover:text-blue-500">
-      Stocks
+    <span className="text-muted-foreground/60">/</span>
+    <a href="/dashboard" className="hover:text-primary transition-colors duration-200 font-medium">
+      Dashboard
     </a>
-    <span>/</span>
-    <span className="text-blue-500">{stock}</span>
+    <span className="text-muted-foreground/60">/</span>
+    <span className="text-primary font-semibold">{stock}</span>
   </motion.div>
 );
 
@@ -266,22 +266,24 @@ const StockChart = ({ stock }) => {
   return (
     <motion.div
       {...fadeInUp}
-      className="bg-gray-800 p-4 md:p-6 rounded-lg shadow-lg my-6"
+      className="bg-card/60 backdrop-blur-sm p-6 md:p-8 rounded-xl border border-border/50 shadow-lg my-8"
     >
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-        <div>
-          <h2 className="text-xl md:text-2xl font-bold text-white">{stock}</h2>
-          <div className="flex items-center space-x-2 mt-1">
-            <span className="text-2xl md:text-3xl font-bold text-white">
-              {currentValue.toFixed(2)}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6">
+        <div className="mb-4 lg:mb-0">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">{stock}</h2>
+          <div className="flex items-baseline space-x-4">
+            <span className="text-3xl md:text-4xl font-bold text-foreground">
+              ₹{currentValue.toFixed(2)}
             </span>
             <motion.span
-              className={`flex items-center text-sm md:text-base ${
-                change.value >= 0 ? "text-green-500" : "text-red-500"
+              className={`flex items-center text-sm md:text-base font-semibold px-3 py-1 rounded-full ${
+                change.value >= 0
+                  ? "text-green-700 bg-green-100 dark:text-green-400 dark:bg-green-900/30"
+                  : "text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/30"
               }`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              key={currentValue} // Animate when currentValue (and thus change) updates
+              key={currentValue}
             >
               {change.value >= 0 ? (
                 <ArrowUpRight size={16} className="mr-1" />
@@ -293,46 +295,53 @@ const StockChart = ({ stock }) => {
             </motion.span>
           </div>
         </div>
-        <div className="flex space-x-2 mt-4 md:mt-0">
+        <div className="flex space-x-3">
           <motion.button
-            className="bg-blue-500 text-white px-3 py-2 md:px-4 text-xs md:text-sm rounded hover:bg-blue-600 transition-colors flex items-center"
+            className="bg-primary text-primary-foreground px-4 py-2 text-sm font-medium rounded-lg hover:bg-primary/90 transition-all duration-200 flex items-center shadow-sm hover:shadow-md"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <PlusCircle className="inline-block mr-1 md:mr-2" size={14} />{" "}
+            <PlusCircle className="mr-2" size={16} />
             Create Alert
           </motion.button>
           <motion.button
-            className="bg-gray-700 text-white px-3 py-2 md:px-4 text-xs md:text-sm rounded hover:bg-gray-600 transition-colors flex items-center"
+            className="bg-secondary text-secondary-foreground px-4 py-2 text-sm font-medium rounded-lg hover:bg-secondary/80 transition-all duration-200 flex items-center shadow-sm hover:shadow-md"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Eye className="inline-block mr-1 md:mr-2" size={14} /> Watchlist
+            <Eye className="mr-2" size={16} />
+            Watchlist
           </motion.button>
         </div>
       </div>
-      <Chart
-        chartType="CandlestickChart"
-        width="100%"
-        height="300px"
-        data={data}
-      />
-      <div className="flex justify-around md:justify-between mt-4 overflow-x-auto space-x-1">
-        {["5M", "10M", "15M", "30M", "1H"].map((range) => (
-          <motion.button
-            key={range}
-            className={`text-xs sm:text-sm px-2 py-1 rounded ${
-              timeRange === range
-                ? "bg-blue-600 text-white"
-                : "text-gray-300 hover:bg-gray-700"
-            } transition-colors flex items-center`}
-            onClick={() => setTimeRange(range)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Clock size={12} className="mr-1" /> {range}
-          </motion.button>
-        ))}
+
+      <div className="bg-card/40 rounded-lg p-4 mb-6">
+        <Chart
+          chartType="CandlestickChart"
+          width="100%"
+          height="320px"
+          data={data}
+        />
+      </div>
+
+      <div className="flex justify-center md:justify-end">
+        <div className="flex bg-muted/50 rounded-lg p-1">
+          {["5M", "10M", "15M", "30M", "1H"].map((range) => (
+            <motion.button
+              key={range}
+              className={`text-xs sm:text-sm px-3 py-2 rounded-md font-medium transition-all duration-200 flex items-center ${
+                timeRange === range
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+              onClick={() => setTimeRange(range)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Clock size={14} className="mr-1" /> {range}
+            </motion.button>
+          ))}
+        </div>
       </div>
     </motion.div>
   );
@@ -398,75 +407,85 @@ const OptionsTable = ({ stock }) => {
   return (
     <motion.div
       {...fadeInUp}
-      className="bg-gray-800 p-4 md:p-6 rounded-lg shadow-lg my-6 overflow-x-auto"
+      className="bg-card/60 backdrop-blur-sm p-6 md:p-8 rounded-xl border border-border/50 shadow-lg my-8 overflow-x-auto"
     >
-      <h3 className="text-lg md:text-xl font-bold text-white mb-4 flex items-center">
-        <DollarSign size={20} className="mr-2" /> Top {stock} Options
-      </h3>
-      <table className="w-full text-left min-w-[400px]">
-        <thead>
-          <tr className="text-gray-400 border-b border-gray-700 text-xs md:text-sm">
-            <th className="py-2 px-1 md:px-2">Strike</th>
-            <th className="py-2 px-1 md:px-2">Call Price</th>
-            <th className="py-2 px-1 md:px-2">Call Chg%</th>
-            <th className="py-2 px-1 md:px-2">Put Price</th>
-            <th className="py-2 px-1 md:px-2">Put Chg%</th>
-          </tr>
-        </thead>
-        <tbody>
-          {options.map((option, index) => (
-            <motion.tr
-              key={`${option.strike}-${index}`}
-              className="border-b border-gray-700 text-xs md:text-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.05, duration: 0.3 }}
-            >
-              <td className="py-2 px-1 md:px-2 text-white">{option.strike}</td>
-              <td className="py-2 px-1 md:px-2 text-white">
-                {option.callPrice.toFixed(2)}
-              </td>
-              <td className="py-2 px-1 md:px-2">
-                <motion.div
-                  className={
-                    option.callChange >= 0 ? "text-green-500" : "text-red-500"
-                  }
-                  key={`call-${option.strike}-${option.callChange}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  {option.callChange >= 0 ? (
-                    <ArrowUpRight size={12} className="inline mr-0.5" />
-                  ) : (
-                    <ArrowDownRight size={12} className="inline mr-0.5" />
-                  )}
-                  {option.callChange.toFixed(2)}%
-                </motion.div>
-              </td>
-              <td className="py-2 px-1 md:px-2 text-white">
-                {option.putPrice.toFixed(2)}
-              </td>
-              <td className="py-2 px-1 md:px-2">
-                <motion.div
-                  className={
-                    option.putChange >= 0 ? "text-green-500" : "text-red-500"
-                  }
-                  key={`put-${option.strike}-${option.putChange}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  {option.putChange >= 0 ? (
-                    <ArrowUpRight size={12} className="inline mr-0.5" />
-                  ) : (
-                    <ArrowDownRight size={12} className="inline mr-0.5" />
-                  )}
-                  {option.putChange.toFixed(2)}%
-                </motion.div>
-              </td>
-            </motion.tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="mb-6">
+        <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2 flex items-center">
+          <DollarSign size={24} className="mr-3 text-primary" />
+          Top {stock} Options
+        </h3>
+        <p className="text-muted-foreground">Live options data with real-time updates</p>
+      </div>
+      <div className="bg-card/40 rounded-lg overflow-hidden">
+        <table className="w-full text-left min-w-[500px]">
+          <thead>
+            <tr className="text-muted-foreground border-b border-border/50 text-sm font-semibold">
+              <th className="py-4 px-4 font-bold">Strike</th>
+              <th className="py-4 px-4 font-bold">Call Price</th>
+              <th className="py-4 px-4 font-bold">Call Chg%</th>
+              <th className="py-4 px-4 font-bold">Put Price</th>
+              <th className="py-4 px-4 font-bold">Put Chg%</th>
+            </tr>
+          </thead>
+          <tbody>
+            {options.map((option, index) => (
+              <motion.tr
+                key={`${option.strike}-${index}`}
+                className="border-b border-border/30 text-sm hover:bg-muted/30 transition-colors duration-200"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.3 }}
+              >
+                <td className="py-4 px-4 text-foreground font-semibold">{option.strike}</td>
+                <td className="py-4 px-4 text-foreground font-medium">
+                  ₹{option.callPrice.toFixed(2)}
+                </td>
+                <td className="py-4 px-4">
+                  <motion.div
+                    className={`font-semibold flex items-center ${
+                      option.callChange >= 0
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}
+                    key={`call-${option.strike}-${option.callChange}`}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                  >
+                    {option.callChange >= 0 ? (
+                      <ArrowUpRight size={14} className="mr-1" />
+                    ) : (
+                      <ArrowDownRight size={14} className="mr-1" />
+                    )}
+                    {option.callChange.toFixed(2)}%
+                  </motion.div>
+                </td>
+                <td className="py-4 px-4 text-foreground font-medium">
+                  ₹{option.putPrice.toFixed(2)}
+                </td>
+                <td className="py-4 px-4">
+                  <motion.div
+                    className={`font-semibold flex items-center ${
+                      option.putChange >= 0
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}
+                    key={`put-${option.strike}-${option.putChange}`}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                  >
+                    {option.putChange >= 0 ? (
+                      <ArrowUpRight size={14} className="mr-1" />
+                    ) : (
+                      <ArrowDownRight size={14} className="mr-1" />
+                    )}
+                    {option.putChange.toFixed(2)}%
+                  </motion.div>
+                </td>
+              </motion.tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </motion.div>
   );
 };
@@ -501,20 +520,24 @@ const OpenInterest = () => {
   return (
     <motion.div
       {...fadeInUp}
-      className="bg-gray-800 p-4 md:p-6 rounded-lg shadow-lg my-6"
+      className="bg-card/60 backdrop-blur-sm p-6 md:p-8 rounded-xl border border-border/50 shadow-lg my-8"
     >
-      <h3 className="text-lg md:text-xl font-bold text-white mb-4 flex items-center">
-        <BarChart2 size={20} className="mr-2" /> Open Interest (OI)
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm md:text-base">
+      <div className="mb-6">
+        <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2 flex items-center">
+          <BarChart2 size={24} className="mr-3 text-primary" />
+          Open Interest Analysis
+        </h3>
+        <p className="text-muted-foreground">Market sentiment indicators and open positions</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-center md:text-left"
+          className="bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-900/20 dark:to-red-800/20 p-6 rounded-lg text-center md:text-left"
         >
-          <div className="text-gray-400">Total Put OI</div>
-          <div className="text-white text-lg md:text-xl font-semibold">
+          <div className="text-red-600 dark:text-red-400 font-medium mb-2">Total Put OI</div>
+          <div className="text-foreground text-xl md:text-2xl font-bold">
             {oiData.totalPutOI.toLocaleString()}
           </div>
         </motion.div>
@@ -522,10 +545,10 @@ const OpenInterest = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-center"
+          className="bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/20 p-6 rounded-lg text-center"
         >
-          <div className="text-gray-400">Put/Call Ratio</div>
-          <div className="text-white text-lg md:text-xl font-semibold">
+          <div className="text-amber-600 dark:text-amber-400 font-medium mb-2">Put/Call Ratio</div>
+          <div className="text-foreground text-xl md:text-2xl font-bold">
             {oiData.putCallRatio.toFixed(2)}
           </div>
         </motion.div>
@@ -533,10 +556,10 @@ const OpenInterest = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="text-center md:text-right"
+          className="bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-900/20 dark:to-green-800/20 p-6 rounded-lg text-center md:text-right"
         >
-          <div className="text-gray-400">Total Call OI</div>
-          <div className="text-white text-lg md:text-xl font-semibold">
+          <div className="text-green-600 dark:text-green-400 font-medium mb-2">Total Call OI</div>
+          <div className="text-foreground text-xl md:text-2xl font-bold">
             {oiData.totalCallOI.toLocaleString()}
           </div>
         </motion.div>
@@ -569,13 +592,19 @@ export default function StockDetailPage({ params }) {
   }
 
   return (
-    <div className="bg-gray-900 min-h-screen text-gray-300">
+    <div className="bg-gradient-to-br from-background via-background to-background/95 min-h-screen text-foreground">
       <Header />
-      <main className="container mx-auto px-4 pb-8">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-8">
         <Breadcrumb stock={params.id} />
+
+        {/* Stock Overview Section */}
         <StockChart stock={params.id} />
-        <OptionsTable stock={params.id} />
-        <OpenInterest />
+
+        {/* Market Data Section */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <OptionsTable stock={params.id} />
+          <OpenInterest />
+        </div>
       </main>
     </div>
   );

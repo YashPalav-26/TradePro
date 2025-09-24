@@ -58,24 +58,34 @@ const TabSection: React.FC = () => {
   const [activeTab, setActiveTab] = useState('Stocks');
   const tabs = ['Stocks', 'Mutual Funds', 'ETFs', 'Options', 'Futures'];
   return (
-    <motion.div {...fadeInUp} className="border-b border-border">
-      <ul className="flex space-x-4 sm:space-x-6 lg:space-x-8 overflow-x-auto py-2 px-2 sm:px-0 scrollbar-hide">
-        {tabs.map((tab) => (
-          <motion.li
-            key={tab}
-            className={`cursor-pointer whitespace-nowrap text-sm sm:text-base pb-2 ${
-              activeTab === tab
-                ? 'border-b-2 border-primary text-primary'
-                : 'text-muted-foreground hover:text-primary'
-            }`}
-            onClick={() => setActiveTab(tab)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {tab}
-          </motion.li>
-        ))}
-      </ul>
+    <motion.div {...fadeInUp} className="border-b border-border/50 bg-card/30 backdrop-blur-sm">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <ul className="flex space-x-6 lg:space-x-8 overflow-x-auto py-4 scrollbar-hide">
+          {tabs.map((tab) => (
+            <motion.li
+              key={tab}
+              className={`cursor-pointer whitespace-nowrap text-sm sm:text-base font-medium pb-3 px-1 relative ${
+                activeTab === tab
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              } transition-colors duration-200`}
+              onClick={() => setActiveTab(tab)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {tab}
+              {activeTab === tab && (
+                <motion.div
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"
+                  layoutId="activeTab"
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              )}
+            </motion.li>
+          ))}
+        </ul>
+      </div>
     </motion.div>
   );
 };
@@ -162,74 +172,100 @@ const MarketIndices: React.FC<MarketIndicesProps> = ({
   return (
     <motion.div
       {...fadeInUp}
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 my-4"
+      className="my-8"
     >
-      {marketData.map((index) => {
-        const isWatched = watchlist.some(
-          (watchItem) => watchItem.name === index.name
-        );
-        return (
-          <motion.div
-            key={index.name}
-            className="bg-card p-4 rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer relative"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => router.push(`/dashboard/${index.name}`)}
-          >
-            <div
-              className="absolute top-2 right-2 z-10"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <AddToWatchlistButton
-                item={{ name: index.name, price: index.value }}
-                isInWatchlist={isWatched}
-                onAdd={onAddToWatchlist}
-                onRemove={onRemoveFromWatchlist}
-              />
-            </div>
-            <h3 className="font-semibold text-muted-foreground text-base pr-8">
-              {index.name}
-            </h3>
-            <div className="flex items-center space-x-2 mt-2">
-              <span className="text-lg text-foreground font-medium">
-                {isClient
-                  ? index.value.toLocaleString('en-IN', {
-                      style: 'currency',
-                      currency: 'INR',
-                      maximumFractionDigits: 2,
-                    })
-                  : `₹${index.value.toFixed(2)}`}
-              </span>
-              <motion.span
-                key={index.change}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className={`text-sm flex items-center ${
-                  index.change >= 0 ? 'text-green-500' : 'text-red-500'
-                }`}
-              >
-                {index.change >= 0 ? (
-                  <ArrowUpRight size={16} />
-                ) : (
-                  <ArrowDownRight size={16} />
-                )}
-                {index.change.toFixed(2)} ({index.percentChange.toFixed(2)}%)
-              </motion.span>
-            </div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Market Overview</h2>
+          <p className="text-muted-foreground">Live market indices and sentiment analysis</p>
+        </div>
+        <div className="text-right">
+          <div className="text-sm text-muted-foreground">Last updated</div>
+          <div className="text-sm font-medium text-foreground">
+            {new Date().toLocaleTimeString('en-IN', {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            })}
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {marketData.map((index, mapIndex) => {
+          const isWatched = watchlist.some(
+            (watchItem) => watchItem.name === index.name
+          );
+          return (
             <motion.div
-              className={`mt-2 text-sm font-semibold ${
-                index.sentiment === 'Positive'
-                  ? 'text-green-400'
-                  : index.sentiment === 'Negative'
-                  ? 'text-red-400'
-                  : 'text-gray-400'
-              }`}
+              key={index.name}
+              className="group bg-card/60 backdrop-blur-sm p-6 rounded-xl border border-border/50 shadow-sm hover:shadow-lg hover:border-border transition-all duration-300 cursor-pointer relative overflow-hidden"
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.push(`/dashboard/${index.name}`)}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: mapIndex * 0.1 }}
             >
-              Sentiment: {index.sentiment}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div
+                className="absolute top-3 right-3 z-10"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <AddToWatchlistButton
+                  item={{ name: index.name, price: index.value }}
+                  isInWatchlist={isWatched}
+                  onAdd={onAddToWatchlist}
+                  onRemove={onRemoveFromWatchlist}
+                />
+              </div>
+              <div className="relative z-10">
+                <h3 className="font-bold text-foreground text-lg mb-3 pr-8">
+                  {index.name}
+                </h3>
+                <div className="flex items-baseline space-x-3 mb-4">
+                  <span className="text-2xl font-bold text-foreground">
+                    {isClient
+                      ? index.value.toLocaleString('en-IN', {
+                          style: 'currency',
+                          currency: 'INR',
+                          maximumFractionDigits: 2,
+                        })
+                      : `₹${index.value.toFixed(2)}`}
+                  </span>
+                  <motion.span
+                    key={index.change}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className={`text-sm font-semibold flex items-center px-2 py-1 rounded-full ${
+                      index.change >= 0
+                        ? 'text-green-700 bg-green-100 dark:text-green-400 dark:bg-green-900/30'
+                        : 'text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/30'
+                    }`}
+                  >
+                    {index.change >= 0 ? (
+                      <ArrowUpRight size={14} className="mr-1" />
+                    ) : (
+                      <ArrowDownRight size={14} className="mr-1" />
+                    )}
+                    {Math.abs(index.change).toFixed(2)} ({Math.abs(index.percentChange).toFixed(2)}%)
+                  </motion.span>
+                </div>
+                <motion.div
+                  className={`text-sm font-medium ${
+                    index.sentiment === 'Positive'
+                      ? 'text-green-600 dark:text-green-400'
+                      : index.sentiment === 'Negative'
+                      ? 'text-red-600 dark:text-red-400'
+                      : 'text-amber-600 dark:text-amber-400'
+                  }`}
+                >
+                  Sentiment: {index.sentiment}
+                </motion.div>
+              </div>
             </motion.div>
-          </motion.div>
-        );
-      })}
+          );
+        })}
+      </div>
     </motion.div>
   );
 };
@@ -284,12 +320,16 @@ const StockCard: React.FC<StockCardProps> = ({
 
   return (
     <motion.div
-      className="relative bg-card p-4 rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      className="group relative bg-card/60 backdrop-blur-sm p-5 rounded-xl border border-border/50 shadow-sm hover:shadow-lg hover:border-border transition-all duration-300 cursor-pointer overflow-hidden"
+      whileHover={{ scale: 1.03, y: -2 }}
+      whileTap={{ scale: 0.97 }}
       onClick={() => router.push(`/dashboard/${name}`)}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
     >
-      <div className="absolute top-2 right-2 z-10 flex space-x-1">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute top-3 right-3 z-10 flex space-x-2">
         <div onClick={(e) => e.stopPropagation()}>
           <AddToWatchlistButton
             item={{ name, price }}
@@ -298,55 +338,59 @@ const StockCard: React.FC<StockCardProps> = ({
             onRemove={onRemoveFromWatchlist}
           />
         </div>
-        <button
+        <motion.button
           onClick={(e) => {
             e.stopPropagation();
             onAddToPortfolio({ name, price, quantity: 1 });
           }}
-          className="p-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full transition-colors flex items-center justify-center"
+          className="p-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full transition-all duration-200 flex items-center justify-center shadow-sm hover:shadow-md"
           title="Add to Portfolio"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
         >
-          <PlusSquare size={16} />
-        </button>
+          <PlusSquare size={14} />
+        </motion.button>
       </div>
-      <h3 className="font-semibold text-foreground mb-2 text-base pr-20">
-        {name}
-      </h3>
-      <div className="flex items-center justify-between">
-        <span className="text-lg text-foreground font-medium">
-          {isClient
-            ? price.toLocaleString('en-IN', {
-                style: 'currency',
-                currency: 'INR',
-                maximumFractionDigits: 2,
-              })
-            : `₹${price.toFixed(2)}`}
-        </span>
-
-        <motion.span
-          key={`${name}-${change}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className={`text-sm flex items-center ${
-            change >= 0 ? 'text-green-500' : 'text-red-500'
+      <div className="relative z-10">
+        <h3 className="font-bold text-foreground mb-3 text-lg pr-20 leading-tight">
+          {name}
+        </h3>
+        <div className="flex items-baseline justify-between mb-4">
+          <span className="text-xl font-bold text-foreground">
+            {isClient
+              ? price.toLocaleString('en-IN', {
+                  style: 'currency',
+                  currency: 'INR',
+                  maximumFractionDigits: 2,
+                })
+              : `₹${price.toFixed(2)}`}
+          </span>
+          <motion.span
+            key={`${name}-${change}`}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className={`text-sm font-semibold flex items-center px-2 py-1 rounded-full ${
+              change >= 0
+                ? 'text-green-700 bg-green-100 dark:text-green-400 dark:bg-green-900/30'
+                : 'text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/30'
+            }`}
+          >
+            {change >= 0 ? <ArrowUpRight size={14} className="mr-1" /> : <ArrowDownRight size={14} className="mr-1" />}
+            {Math.abs(change).toFixed(2)} ({Math.abs(percentChange).toFixed(2)}%)
+          </motion.span>
+        </div>
+        <motion.div
+          className={`text-sm font-medium ${
+            sentiment === 'Positive'
+              ? 'text-green-600 dark:text-green-400'
+              : sentiment === 'Negative'
+              ? 'text-red-600 dark:text-red-400'
+              : 'text-amber-600 dark:text-amber-400'
           }`}
         >
-          {change >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-          {change.toFixed(2)} ({percentChange.toFixed(2)}%)
-        </motion.span>
+          Sentiment: {sentiment}
+        </motion.div>
       </div>
-
-      <motion.div
-        className={`mt-2 text-sm font-semibold ${
-          sentiment === 'Positive'
-            ? 'text-green-400'
-            : sentiment === 'Negative'
-            ? 'text-red-400'
-            : 'text-gray-400'
-        }`}
-      >
-        Sentiment: {sentiment}
-      </motion.div>
     </motion.div>
   );
 };
@@ -373,31 +417,40 @@ const MostBought: React.FC<MostBoughtProps> = ({
     { name: 'Zomato', price: 82.3 },
   ];
   return (
-    <motion.div {...fadeInUp} className="my-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-foreground">
-          Most Bought on TradePro
-        </h2>
+    <motion.div {...fadeInUp} className="my-12">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">
+            Most Bought on TradePro
+          </h2>
+          <p className="text-muted-foreground">Popular stocks trending among our users</p>
+        </div>
         <motion.a
           href="#"
-          className="text-primary text-sm hover:underline flex items-center"
+          className="text-primary text-sm font-medium hover:text-primary/80 flex items-center px-4 py-2 rounded-lg hover:bg-primary/10 transition-all duration-200"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
           View all <ChevronRight size={16} className="ml-1" />
         </motion.a>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {list.map((s) => (
-          <StockCard
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {list.map((s, index) => (
+          <motion.div
             key={s.name}
-            name={s.name}
-            initialPrice={s.price}
-            onAddToPortfolio={onAddToPortfolio}
-            watchlist={watchlist}
-            onAddToWatchlist={onAddToWatchlist}
-            onRemoveFromWatchlist={onRemoveFromWatchlist}
-          />
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <StockCard
+              name={s.name}
+              initialPrice={s.price}
+              onAddToPortfolio={onAddToPortfolio}
+              watchlist={watchlist}
+              onAddToWatchlist={onAddToWatchlist}
+              onRemoveFromWatchlist={onRemoveFromWatchlist}
+            />
+          </motion.div>
         ))}
       </div>
     </motion.div>
@@ -412,26 +465,34 @@ const ProductsAndTools = () => {
     { name: 'US Stocks', icon: Activity },
   ];
   return (
-    <motion.div {...fadeInUp} className="my-8">
-      <h2 className="text-xl font-semibold text-foreground mb-4">
-        Products & tools
-      </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        {products.map((product) => (
+    <motion.div {...fadeInUp} className="my-12">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-foreground mb-3">
+          Products & Tools
+        </h2>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Comprehensive trading solutions and investment tools designed for every type of investor
+        </p>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+        {products.map((product, index) => (
           <motion.div
             key={product.name}
-            className="bg-card p-4 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-center cursor-pointer"
-            whileHover={{ scale: 1.05, backgroundColor: 'var(--accent)' }}
+            className="group bg-card/60 backdrop-blur-sm p-6 rounded-xl border border-border/50 shadow-sm hover:shadow-lg hover:border-border transition-all duration-300 text-center cursor-pointer"
+            whileHover={{ scale: 1.05, y: -4 }}
             whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
           >
             <motion.div
-              className="bg-primary w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2"
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.5 }}
+              className="bg-gradient-to-br from-primary to-primary/80 w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-md group-hover:shadow-lg transition-shadow duration-300"
+              whileHover={{ rotate: 360, scale: 1.1 }}
+              transition={{ duration: 0.6 }}
             >
-              <product.icon className="text-primary-foreground w-6 h-6" />
+              <product.icon className="text-primary-foreground w-7 h-7" />
             </motion.div>
-            <span className="text-muted-foreground text-base">
+            <span className="text-foreground font-medium text-base group-hover:text-primary transition-colors duration-200">
               {product.name}
             </span>
           </motion.div>
@@ -463,31 +524,40 @@ const TopGainers: React.FC<TopGainersProps> = ({
     { name: 'Bharti Airtel', price: 835.6 },
   ];
   return (
-    <motion.div {...fadeInUp} className="my-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-foreground">
-          Top Gainers
-        </h2>
+    <motion.div {...fadeInUp} className="my-12">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">
+            Top Gainers
+          </h2>
+          <p className="text-muted-foreground">Best performing stocks today</p>
+        </div>
         <motion.a
           href="#"
-          className="text-primary text-sm hover:underline flex items-center"
+          className="text-primary text-sm font-medium hover:text-primary/80 flex items-center px-4 py-2 rounded-lg hover:bg-primary/10 transition-all duration-200"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
           See more <ChevronRight size={16} className="ml-1" />
         </motion.a>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {list.map((s) => (
-          <StockCard
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {list.map((s, index) => (
+          <motion.div
             key={s.name}
-            name={s.name}
-            initialPrice={s.price}
-            onAddToPortfolio={onAddToPortfolio}
-            watchlist={watchlist}
-            onAddToWatchlist={onAddToWatchlist}
-            onRemoveFromWatchlist={onRemoveFromWatchlist}
-          />
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <StockCard
+              name={s.name}
+              initialPrice={s.price}
+              onAddToPortfolio={onAddToPortfolio}
+              watchlist={watchlist}
+              onAddToWatchlist={onAddToWatchlist}
+              onRemoveFromWatchlist={onRemoveFromWatchlist}
+            />
+          </motion.div>
         ))}
       </div>
     </motion.div>
@@ -1022,58 +1092,79 @@ const EnhancedTradeProDashboard: React.FC = () => {
   }
 
   return (
-    <div className="bg-background min-h-screen text-foreground flex flex-col lg:flex-row relative">
+    <div className="bg-gradient-to-br from-background via-background to-background/95 min-h-screen text-foreground flex flex-col lg:flex-row relative">
       <ActualWatchlistSidebar
         watchlist={watchlist}
         remove={removeFromWatchlist}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 flex-1 max-w-7xl">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 flex-1 max-w-7xl py-8">
+          {/* Market Overview Section */}
           <TabSection />
           <MarketIndices
             watchlist={watchlist}
             onAddToWatchlist={addToWatchlist}
             onRemoveFromWatchlist={removeFromWatchlist}
           />
-          <MostBought
-            onAddToPortfolio={(item) =>
-              addToPortfolio({
-                name: item.name,
-                price: item.price,
-                quantity: 1,
-              })
-            }
-            watchlist={watchlist}
-            onAddToWatchlist={addToWatchlist}
-            onRemoveFromWatchlist={removeFromWatchlist}
-          />
-          <ProductsAndTools />
-          <TopGainers
-            onAddToPortfolio={(item) =>
-              addToPortfolio({
-                name: item.name,
-                price: item.price,
-                quantity: 1,
-              })
-            }
-            watchlist={watchlist}
-            onAddToWatchlist={addToWatchlist}
-            onRemoveFromWatchlist={removeFromWatchlist}
-          />
-          <div className="my-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">
-              My Portfolio
-            </h2>
-            <PortfolioSidebarComponent
-              portfolio={portfolio}
-              remove={removeFromPortfolio}
-              updatePrice={updatePrice}
-              handleTransaction={handleTransaction}
+
+          {/* Trading Section */}
+          <div className="space-y-12">
+            <MostBought
+              onAddToPortfolio={(item) =>
+                addToPortfolio({
+                  name: item.name,
+                  price: item.price,
+                  quantity: 1,
+                })
+              }
+              watchlist={watchlist}
+              onAddToWatchlist={addToWatchlist}
+              onRemoveFromWatchlist={removeFromWatchlist}
+            />
+
+            <TopGainers
+              onAddToPortfolio={(item) =>
+                addToPortfolio({
+                  name: item.name,
+                  price: item.price,
+                  quantity: 1,
+                })
+              }
+              watchlist={watchlist}
+              onAddToWatchlist={addToWatchlist}
+              onRemoveFromWatchlist={removeFromWatchlist}
             />
           </div>
-          <TopByMarketCap />
-          <NewsFeed />
+
+          {/* Tools and Features Section */}
+          <ProductsAndTools />
+
+          {/* Portfolio and Analytics Section */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 my-12">
+            <div className="xl:col-span-2">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  Portfolio Overview
+                </h2>
+                <p className="text-muted-foreground">Track your investments and performance</p>
+              </div>
+              <PortfolioSidebarComponent
+                portfolio={portfolio}
+                remove={removeFromPortfolio}
+                updatePrice={updatePrice}
+                handleTransaction={handleTransaction}
+              />
+            </div>
+            <div className="space-y-6">
+              <TopByMarketCap />
+            </div>
+          </div>
+
+          {/* News and Insights Section */}
+          <div className="mt-12">
+            <NewsFeed />
+          </div>
         </main>
       </div>
     </div>
