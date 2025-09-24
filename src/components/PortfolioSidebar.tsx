@@ -168,79 +168,118 @@ const PortfolioSidebarComponent: React.FC<PortfolioSidebarProps> = ({
   return (
     <motion.aside
       {...fadeInUp}
-      className="w-full xl:w-80 bg-gray-800 p-4 text-gray-300 rounded-lg shadow-lg"
+      className="w-full xl:w-96 bg-card/60 backdrop-blur-xl border border-border/50 rounded-xl shadow-lg p-6"
     >
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold flex items-center">
-          <DollarSign className="mr-2 text-blue-500" size={20} /> Portfolio
-        </h3>
-        <PieChart className="text-gray-400" size={16} />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <DollarSign className="text-primary" size={20} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-foreground">
+              Portfolio
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Your investment holdings
+            </p>
+          </div>
+        </div>
+        <div className="p-2 bg-muted/30 rounded-lg">
+          <PieChart className="text-muted-foreground" size={18} />
+        </div>
       </div>
 
       {portfolio.length > 0 && (
         <motion.div
-          className="mb-6 p-3 bg-gray-700 rounded-lg"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          className="mb-8 p-6 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm rounded-xl border border-border/50"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          {/* ... Portfolio Stats JSX (same as yours) ... */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-gray-400">Total Invested</p>
-              <p className="font-semibold text-white">
-                ₹
-                {portfolioStats.totalInvested.toLocaleString("en-IN", {
+          <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center">
+            <TrendingUp className="mr-2 text-primary" size={18} />
+            Portfolio Summary
+          </h4>
+          <div className="grid grid-cols-2 gap-4">
+            <motion.div
+              className="bg-muted/30 p-4 rounded-lg"
+              whileHover={{ scale: 1.02 }}
+            >
+              <p className="text-muted-foreground text-sm mb-1">Total Invested</p>
+              <p className="font-bold text-foreground text-lg">
+                ₹{portfolioStats.totalInvested.toLocaleString("en-IN", {
                   maximumFractionDigits: 0,
                 })}
               </p>
-            </div>
-            <div>
-              <p className="text-gray-400">Current Value</p>
-              <p className="font-semibold text-white">
-                ₹
-                {portfolioStats.currentValue.toLocaleString("en-IN", {
+            </motion.div>
+            <motion.div
+              className="bg-muted/30 p-4 rounded-lg"
+              whileHover={{ scale: 1.02 }}
+            >
+              <p className="text-muted-foreground text-sm mb-1">Current Value</p>
+              <p className="font-bold text-foreground text-lg">
+                ₹{portfolioStats.currentValue.toLocaleString("en-IN", {
                   maximumFractionDigits: 0,
                 })}
               </p>
-            </div>
-            <div className="col-span-2">
-              <p className="text-gray-400">Total P&L</p>
+            </motion.div>
+            <motion.div
+              className="col-span-2 bg-gradient-to-r from-primary/10 to-primary/5 p-4 rounded-lg border border-primary/20"
+              whileHover={{ scale: 1.02 }}
+            >
+              <p className="text-muted-foreground text-sm mb-2">Total P&L</p>
               <div
-                className={`font-semibold flex items-center ${
+                className={`font-bold text-lg flex items-center ${
                   portfolioStats.totalProfitLoss >= 0
-                    ? "text-green-400"
-                    : "text-red-400"
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
                 }`}
               >
                 {portfolioStats.totalProfitLoss >= 0 ? (
-                  <TrendingUp size={16} className="mr-1" />
+                  <TrendingUp size={18} className="mr-2" />
                 ) : (
-                  <TrendingDown size={16} className="mr-1" />
+                  <TrendingDown size={18} className="mr-2" />
                 )}
-                ₹
-                {Math.abs(portfolioStats.totalProfitLoss).toLocaleString(
-                  "en-IN",
-                  { maximumFractionDigits: 0 }
-                )}
-                ({totalProfitLossPercent >= 0 ? "+" : ""}
-                {totalProfitLossPercent.toFixed(2)}%)
+                ₹{Math.abs(portfolioStats.totalProfitLoss).toLocaleString("en-IN", {
+                  maximumFractionDigits: 0
+                })}
+                <span className="ml-2 text-sm">
+                  ({totalProfitLossPercent >= 0 ? "+" : ""}
+                  {totalProfitLossPercent.toFixed(2)}%)
+                </span>
               </div>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
       )}
 
       {portfolio.length === 0 ? (
-        <div className="text-center py-8">
-          <PieChart className="mx-auto text-gray-500 mb-3" size={48} />
-          <p className="text-sm text-gray-400">No assets in portfolio.</p>
-          <p className="text-xs text-gray-500 mt-1">
-            Add stocks to start tracking
+        <motion.div
+          className="text-center py-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="p-4 bg-muted/30 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+            <PieChart className="text-muted-foreground w-10 h-10" />
+          </div>
+          <h4 className="text-lg font-semibold text-foreground mb-2">
+            No assets in portfolio
+          </h4>
+          <p className="text-sm text-muted-foreground mb-4">
+            Start building your investment portfolio
           </p>
-        </div>
+          <motion.button
+            className="text-primary hover:text-primary/80 font-medium text-sm"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Explore Markets →
+          </motion.button>
+        </motion.div>
       ) : (
-        <div className="space-y-3 max-h-96 overflow-y-auto">
-          {portfolio.map((item) => {
+        <div className="space-y-4 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+          {portfolio.map((item, index) => {
             // For DISPLAY, use the local displayPrices.
             // For financial CALCULATIONS and TRANSACTIONS, use item.currentPrice from the prop.
             const priceForDisplay =
@@ -268,92 +307,112 @@ const PortfolioSidebarComponent: React.FC<PortfolioSidebarProps> = ({
             return (
               <motion.div
                 key={item.name}
-                className="bg-gray-700 p-3 rounded-lg border border-gray-600"
-                whileHover={{ scale: 1.02 }}
+                className="bg-card/60 backdrop-blur-sm p-5 rounded-xl border border-border/50 hover:border-border hover:shadow-md transition-all duration-300"
+                whileHover={{ scale: 1.02, y: -2 }}
                 layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
               >
-                <div className="flex justify-between items-start mb-2">
+                <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-white text-sm">
+                    <h4 className="font-bold text-foreground text-base mb-1">
                       {item.name}
                     </h4>
-                    <p className="text-xs text-gray-400">
-                      {item.quantity} shares • {allocation.toFixed(1)}%
-                      allocation
-                    </p>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">
+                        {item.quantity} shares
+                      </span>
+                      <span className="text-primary font-medium bg-primary/10 px-2 py-1 rounded-full">
+                        {allocation.toFixed(1)}% allocation
+                      </span>
+                    </div>
                   </div>
-                  <button
+                  <motion.button
                     onClick={() => remove(item.name)}
-                    className="text-red-400 hover:text-red-300 p-1"
+                    className="text-muted-foreground hover:text-destructive p-2 rounded-lg hover:bg-destructive/10 transition-all duration-200"
                     title="Remove from portfolio"
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
                   >
                     <X size={16} />
-                  </button>
+                  </motion.button>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                  <div>
-                    <p className="text-gray-400">Current Price</p>
-                    <p className="font-medium text-white">
-                      ₹{priceForDisplay.toFixed(2)} {/* Use priceForDisplay */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <motion.div
+                    className="bg-muted/30 p-3 rounded-lg"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <p className="text-muted-foreground text-xs mb-1">Current Price</p>
+                    <p className="font-bold text-foreground text-sm">
+                      ₹{priceForDisplay.toFixed(2)}
                     </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400">Avg. Buy Price</p>
-                    <p className="font-medium text-white">
-                      ₹
-                      {(typeof item.purchasePrice === "number"
+                  </motion.div>
+                  <motion.div
+                    className="bg-muted/30 p-3 rounded-lg"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <p className="text-muted-foreground text-xs mb-1">Avg. Buy Price</p>
+                    <p className="font-bold text-foreground text-sm">
+                      ₹{(typeof item.purchasePrice === "number"
                         ? item.purchasePrice
                         : 0
                       ).toFixed(2)}
                     </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400">Invested</p>
-                    <p className="font-medium text-white">
-                      ₹
-                      {(typeof item.totalInvested === "number"
+                  </motion.div>
+                  <motion.div
+                    className="bg-muted/30 p-3 rounded-lg"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <p className="text-muted-foreground text-xs mb-1">Total Invested</p>
+                    <p className="font-bold text-foreground text-sm">
+                      ₹{(typeof item.totalInvested === "number"
                         ? item.totalInvested
                         : 0
                       ).toLocaleString("en-IN")}
                     </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400">Current Value (Actual)</p>
-                    <p className="font-medium text-white">
+                  </motion.div>
+                  <motion.div
+                    className="bg-muted/30 p-3 rounded-lg"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <p className="text-muted-foreground text-xs mb-1">Current Value</p>
+                    <p className="font-bold text-foreground text-sm">
                       ₹{itemCurrentValueUsingActual.toLocaleString("en-IN")}
                     </p>
-                  </div>
+                  </motion.div>
                 </div>
-                <div className="mb-3">
-                  <p className="text-gray-400 text-xs">P&L (Actual)</p>
-                  <div
-                    className={`font-semibold text-sm flex items-center ${
+                <div className="mb-4">
+                  <p className="text-muted-foreground text-xs mb-2">P&L</p>
+                  <motion.div
+                    className={`font-bold text-base flex items-center p-3 rounded-lg ${
                       itemProfitLossUsingActual >= 0
-                        ? "text-green-400"
-                        : "text-red-400"
+                        ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                        : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
                     }`}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
                   >
-                    {/* ... P&L JSX (same as yours) ... */}
                     {itemProfitLossUsingActual >= 0 ? (
-                      <TrendingUp size={14} className="mr-1" />
+                      <TrendingUp size={16} className="mr-2" />
                     ) : (
-                      <TrendingDown size={14} className="mr-1" />
+                      <TrendingDown size={16} className="mr-2" />
                     )}
-                    ₹
-                    {Math.abs(itemProfitLossUsingActual).toLocaleString(
-                      "en-IN",
-                      { maximumFractionDigits: 0 }
-                    )}
-                    ({itemProfitLossUsingActual >= 0 ? "+" : ""}
-                    {itemProfitLossPercentUsingActual.toFixed(2)}%)
-                  </div>
+                    ₹{Math.abs(itemProfitLossUsingActual).toLocaleString("en-IN", {
+                      maximumFractionDigits: 0
+                    })}
+                    <span className="ml-2 text-sm">
+                      ({itemProfitLossUsingActual >= 0 ? "+" : ""}
+                      {itemProfitLossPercentUsingActual.toFixed(2)}%)
+                    </span>
+                  </motion.div>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex space-x-3">
                   <motion.button
                     onClick={() =>
                       handleTransaction(item.name, "buy", priceForTransaction)
                     }
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-2 px-3 rounded transition-colors"
+                    className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-sm py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -363,7 +422,7 @@ const PortfolioSidebarComponent: React.FC<PortfolioSidebarProps> = ({
                     onClick={() =>
                       handleTransaction(item.name, "sell", priceForTransaction)
                     }
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs py-2 px-3 rounded transition-colors"
+                    className="flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground text-sm py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     disabled={item.quantity <= 0}
