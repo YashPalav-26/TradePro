@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   LineChart,
   Line,
@@ -239,7 +240,7 @@ const CandlestickChart: React.FC = () => {
     }
   };
 
-  const PatternDot = (props: any) => {
+  const PatternDot = (props: { cx: number; cy: number; payload?: CandleData }) => {
     const { cx, cy, payload } = props;
     if (!payload?.pattern) return null;
 
@@ -256,15 +257,20 @@ const CandlestickChart: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      <div className="container mx-auto px-4 py-4 lg:py-6 max-w-7xl">
-        <div className="mb-6">
-          <div className="mb-4">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent leading-tight">
+    <div className="min-h-screen w-full bg-gradient-to-br from-card/40 via-card/20 to-card/40 backdrop-blur-sm text-foreground">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-7xl">
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="mb-6">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-3">
               Professional Candlestick Pattern Recognition
             </h1>
-            <p className="text-gray-400 mt-1 text-sm sm:text-base">
-              Real-time pattern detection with professional-grade analysis
+            <p className="text-muted-foreground text-base sm:text-lg max-w-2xl">
+              Real-time pattern detection with professional-grade analysis and AI-powered insights
             </p>
           </div>
 
@@ -305,7 +311,7 @@ const CandlestickChart: React.FC = () => {
               )}
             </button>
           </div>
-        </div>
+        </motion.div>
 
         {candles.length > 0 && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
@@ -407,7 +413,7 @@ const CandlestickChart: React.FC = () => {
                   dataKey="close"
                   stroke="transparent"
                   strokeWidth={0}
-                  dot={<PatternDot />}
+                  dot={PatternDot}
                 />
                 {/* Add reference lines for support/resistance */}
                 {candles.length > 20 && (
