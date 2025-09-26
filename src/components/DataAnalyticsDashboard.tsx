@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Line } from "react-chartjs-2";
 import { Chart, ChartData, registerables } from "chart.js";
+import { motion } from "framer-motion";
 import TradingBot from "@/components/TradingBot";
 
 Chart.register(...registerables);
@@ -339,32 +340,50 @@ const DataAnalyticsDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-card/40 via-card/20 to-card/40 backdrop-blur-sm text-foreground">
       {/* Container with responsive padding */}
-      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
-        {/* Header - Responsive typography */}
-        <div className="text-center mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Header - Enhanced typography */}
+        <motion.div
+          className="text-center mb-8 sm:mb-10"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3">
             Financial Data Analytics Dashboard
           </h2>
-        </div>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Professional-grade market analysis with real-time indicators and AI-powered insights
+          </p>
+        </motion.div>
 
-        {/* Controls Section */}
-        <div className="space-y-4 sm:space-y-6 mb-6 sm:mb-8">
+        {/* Controls Section - Enhanced */}
+        <div className="space-y-6 sm:space-y-8 mb-8 sm:mb-10">
           {/* Metric Selection Buttons */}
-          <div className="bg-gray-800/50 rounded-lg p-3 sm:p-4 md:p-6">
-            <h3 className="text-sm sm:text-base md:text-lg font-semibold mb-3 sm:mb-4 text-center text-gray-300">
-              Select Metrics
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          <motion.div
+            className="bg-card/60 backdrop-blur-sm rounded-xl border border-border/50 p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <div className="text-center mb-6">
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2">
+                Select Metrics
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Choose which indicators to display on the chart
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {["Price", "RSI", "Volatility", "Moving Average"].map(
-                (metric) => (
-                  <button
+                (metric, index) => (
+                  <motion.button
                     key={metric}
-                    className={`px-2 sm:px-4 md:px-6 py-2 sm:py-3 rounded-md sm:rounded-lg text-xs sm:text-sm md:text-base font-medium transition-all duration-200 ${
+                    className={`px-4 sm:px-6 py-3 rounded-lg text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md ${
                       selectedMetrics.includes(metric)
-                        ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
-                        : "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                        ? "bg-primary text-primary-foreground shadow-primary/25"
+                        : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground border border-border/50"
                     }`}
                     onClick={() =>
                       setSelectedMetrics((prev) =>
@@ -373,42 +392,74 @@ const DataAnalyticsDashboard = () => {
                           : [...prev, metric]
                       )
                     }
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
                   >
                     {metric}
-                  </button>
+                  </motion.button>
                 )
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* Live Data Toggle */}
-          <div className="bg-gray-800/50 rounded-lg p-3 sm:p-4 md:p-6">
-            <h3 className="text-sm sm:text-base md:text-lg font-semibold mb-3 sm:mb-4 text-center text-gray-300">
-              Data Control
-            </h3>
+          <motion.div
+            className="bg-card/60 backdrop-blur-sm rounded-xl border border-border/50 p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <div className="text-center mb-6">
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2">
+                Data Control
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Control live data generation and market simulation
+              </p>
+            </div>
             <div className="flex justify-center">
-              <button
-                className={`px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-md sm:rounded-lg text-xs sm:text-sm md:text-base font-medium transition-all duration-200 ${
+              <motion.button
+                className={`px-6 sm:px-8 py-3 rounded-lg text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md ${
                   isLive
-                    ? "bg-red-600 hover:bg-red-700 text-white"
-                    : "bg-green-600 hover:bg-green-700 text-white"
-                } shadow-lg`}
+                    ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-destructive/25"
+                    : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/25"
+                }`}
                 onClick={() => setIsLive((prev) => !prev)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 {isLive ? "⏸️ Pause Live Data" : "▶️ Generate Live Data"}
-              </button>
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Market Controls */}
-          <div className="bg-gray-800/50 rounded-lg p-3 sm:p-4 md:p-6">
-            <h3 className="text-sm sm:text-base md:text-lg font-semibold mb-3 sm:mb-4 text-center text-gray-300">
-              Market Parameters
-            </h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto">
+          <motion.div
+            className="bg-card/60 backdrop-blur-sm rounded-xl border border-border/50 p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <div className="text-center mb-6">
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2">
+                Market Parameters
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Adjust market conditions for realistic simulation
+              </p>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
               {/* Market Trend Control */}
-              <div className="space-y-2 sm:space-y-3">
-                <label className="block text-xs sm:text-sm md:text-base font-medium text-center text-gray-300">
+              <motion.div
+                className="space-y-4"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <label className="block text-sm font-medium text-foreground text-center">
                   Market Trend
                 </label>
                 <input
@@ -418,17 +469,21 @@ const DataAnalyticsDashboard = () => {
                   step="1"
                   value={marketTrend}
                   onChange={(e) => setMarketTrend(parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  className="w-full h-3 bg-muted rounded-lg appearance-none cursor-pointer slider"
                 />
                 <div className="text-center">
-                  <span
-                    className={`text-xs sm:text-sm md:text-base font-semibold px-2 py-1 rounded ${
+                  <motion.span
+                    className={`text-sm font-semibold px-3 py-2 rounded-lg ${
                       marketTrend < 0
-                        ? "bg-red-600/20 text-red-400"
+                        ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
                         : marketTrend > 0
-                        ? "bg-green-600/20 text-green-400"
-                        : "bg-gray-600/20 text-gray-400"
+                        ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                        : "bg-muted/50 text-muted-foreground"
                     }`}
+                    key={marketTrend}
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.3 }}
                   >
                     {marketTrend < 0
                       ? "📉 Bearish"
@@ -436,13 +491,18 @@ const DataAnalyticsDashboard = () => {
                       ? "📈 Bullish"
                       : "➡️ Neutral"}{" "}
                     ({marketTrend})
-                  </span>
+                  </motion.span>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Market Volatility Control */}
-              <div className="space-y-2 sm:space-y-3">
-                <label className="block text-xs sm:text-sm md:text-base font-medium text-center text-gray-300">
+              <motion.div
+                className="space-y-4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+              >
+                <label className="block text-sm font-medium text-foreground text-center">
                   Market Volatility
                 </label>
                 <input
@@ -453,17 +513,21 @@ const DataAnalyticsDashboard = () => {
                   onChange={(e) =>
                     setMarketVolatility(parseInt(e.target.value))
                   }
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  className="w-full h-3 bg-muted rounded-lg appearance-none cursor-pointer slider"
                 />
                 <div className="text-center">
-                  <span
-                    className={`text-xs sm:text-sm md:text-base font-semibold px-2 py-1 rounded ${
+                  <motion.span
+                    className={`text-sm font-semibold px-3 py-2 rounded-lg ${
                       marketVolatility <= 3
-                        ? "bg-green-600/20 text-green-400"
+                        ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
                         : marketVolatility <= 6
-                        ? "bg-yellow-600/20 text-yellow-400"
-                        : "bg-red-600/20 text-red-400"
+                        ? "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+                        : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
                     }`}
+                    key={marketVolatility}
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.3 }}
                   >
                     📊 Level {marketVolatility}
                     {marketVolatility <= 3 && " (Low)"}
@@ -471,40 +535,71 @@ const DataAnalyticsDashboard = () => {
                       marketVolatility <= 6 &&
                       " (Medium)"}
                     {marketVolatility > 6 && " (High)"}
-                  </span>
+                  </motion.span>
                 </div>
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Chart Section */}
-        <div className="bg-gray-800 rounded-lg shadow-2xl p-2 sm:p-4 md:p-6 mb-6 sm:mb-8">
-          <div className="h-[250px] xs:h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
+        <motion.div
+          className="bg-card/60 backdrop-blur-sm rounded-xl border border-border/50 shadow-xl p-6 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          <div className="mb-4">
+            <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
+              Live Market Chart
+            </h3>
+            <p className="text-muted-foreground">
+              Real-time price movements with technical indicators
+            </p>
+          </div>
+          <div className="h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] bg-card/40 rounded-lg p-4">
             {chartData && chartData.datasets.length > 0 ? (
               <Line data={chartData} options={chartOptions} />
             ) : (
               <div className="h-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="animate-pulse text-2xl sm:text-3xl md:text-4xl mb-2">
-                    ⏳
+                <motion.div
+                  className="text-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <div className="animate-pulse text-3xl sm:text-4xl mb-4">
+                    📊
                   </div>
-                  <p className="text-gray-400 text-sm sm:text-base md:text-lg">
-                    Loading chart data or no metrics selected...
+                  <p className="text-muted-foreground text-base sm:text-lg mb-2">
+                    Loading chart data...
                   </p>
-                </div>
+                  <p className="text-sm text-muted-foreground/70">
+                    Select metrics above to display data
+                  </p>
+                </motion.div>
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* Trading Bot Section */}
-        <div className="bg-gray-800/50 rounded-lg p-2 sm:p-4 md:p-6">
-          <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-4 sm:mb-6 text-center">
-            🤖 Algorithmic Trading Bot
-          </h3>
+        <motion.div
+          className="bg-card/60 backdrop-blur-sm rounded-xl border border-border/50 p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+        >
+          <div className="text-center mb-6">
+            <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
+              🤖 Algorithmic Trading Bot
+            </h3>
+            <p className="text-muted-foreground">
+              AI-powered trading strategies and automated execution
+            </p>
+          </div>
           <TradingBot />
-        </div>
+        </motion.div>
       </div>
 
       {/* Custom styles for range sliders */}

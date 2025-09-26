@@ -20,6 +20,8 @@ const nextConfig = {
   },
   */
 
+  transpilePackages: ['framer-motion'],
+
   images: {
     remotePatterns: [
       {
