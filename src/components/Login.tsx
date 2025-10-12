@@ -36,15 +36,15 @@ const Login = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md p-8 space-y-6 bg-card rounded-lg shadow-lg"
+        className="w-full max-w-md p-8 space-y-6 bg-card border rounded-2xl shadow-sm"
       >
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-primary">Welcome Back</h1>
-          <p className="text-muted-foreground">Sign in to continue to TradePro</p>
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-2">Welcome Back</h1>
+          <p className="text-muted-foreground font-semibold">Sign in to continue to TradePro</p>
         </div>
 
         {error && (
-          <div className="p-4 text-sm text-destructive-foreground bg-destructive rounded-md">
+          <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/30 rounded-md">
             {error}
           </div>
         )}
@@ -55,7 +55,8 @@ const Login = () => {
             <input
               type="email"
               placeholder="Email"
-              className="w-full pl-10 pr-4 py-3 rounded-md bg-input text-foreground border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+              autoComplete="email"
+              className="w-full pl-10 pr-4 py-3 bg-background text-foreground border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -67,7 +68,8 @@ const Login = () => {
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="Password"
-              className="w-full pl-10 pr-10 py-3 rounded-md bg-input text-foreground border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+              autoComplete="current-password"
+              className="w-full pl-10 pr-10 py-3 bg-background text-foreground border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -75,7 +77,8 @@ const Login = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Toggle password visibility"
             >
               {showPassword ? <EyeOff /> : <Eye />}
             </button>
@@ -83,7 +86,7 @@ const Login = () => {
 
           <div className="flex items-center justify-between">
             <label className="flex items-center space-x-2">
-              <input type="checkbox" className="rounded border-border text-primary focus:ring-primary" />
+              <input type="checkbox" className="rounded border-border text-primary focus:ring-ring" />
               <span className="text-sm text-muted-foreground">Remember me</span>
             </label>
             <a href="#" className="text-sm text-primary hover:underline">
@@ -93,9 +96,10 @@ const Login = () => {
 
           <motion.button
             type="submit"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="w-full flex justify-center items-center gap-2 bg-primary text-primary-foreground py-3 rounded-md transition-colors hover:bg-primary/90"
+            whileHover={{ scale: 1.03, y: -1 }}
+            whileTap={{ scale: 0.97 }}
+            className="w-full flex justify-center items-center gap-2 bg-primary text-primary-foreground py-3.5 rounded-lg shadow-sm hover:shadow-md transition-all text-base"
+            aria-label="Sign in"
           >
             <LogIn />
             Sign In
@@ -113,15 +117,15 @@ const Login = () => {
 
         <div className="grid grid-cols-2 gap-4">
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            className="w-full py-3 border border-border rounded-md flex items-center justify-center gap-2 hover:bg-accent"
+            whileHover={{ scale: 1.03 }}
+            className="w-full py-3 border border-border rounded-lg flex items-center justify-center gap-2 hover:bg-accent transition-all"
           >
             {/* Add Google Icon Here */}
             <span>Google</span>
           </motion.button>
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            className="w-full py-3 border border-border rounded-md flex items-center justify-center gap-2 hover:bg-accent"
+            whileHover={{ scale: 1.03 }}
+            className="w-full py-3 border border-border rounded-lg flex items-center justify-center gap-2 hover:bg-accent transition-all"
           >
             {/* Add GitHub Icon Here */}
             <span>GitHub</span>
