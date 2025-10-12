@@ -40,15 +40,15 @@ const Register = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md p-8 space-y-6 bg-card rounded-lg shadow-lg"
+        className="w-full max-w-md p-8 space-y-6 bg-card border rounded-2xl shadow-sm"
       >
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-primary">Create an Account</h1>
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-2">Create an Account</h1>
           <p className="text-muted-foreground">Join TradePro today</p>
         </div>
 
         {error && (
-          <div className="p-4 text-sm text-destructive-foreground bg-destructive rounded-md">
+          <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/30 rounded-md">
             {error}
           </div>
         )}
@@ -59,7 +59,8 @@ const Register = () => {
             <input
               type="text"
               placeholder="Username"
-              className="w-full pl-10 pr-4 py-3 rounded-md bg-input text-foreground border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+              autoComplete="username"
+              className="w-full pl-10 pr-4 py-3 bg-background text-foreground border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -71,7 +72,8 @@ const Register = () => {
             <input
               type="email"
               placeholder="Email"
-              className="w-full pl-10 pr-4 py-3 rounded-md bg-input text-foreground border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+              autoComplete="email"
+              className="w-full pl-10 pr-4 py-3 bg-background text-foreground border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -83,7 +85,8 @@ const Register = () => {
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="Password"
-              className="w-full pl-10 pr-10 py-3 rounded-md bg-input text-foreground border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+              autoComplete="new-password"
+              className="w-full pl-10 pr-10 py-3 bg-background text-foreground border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -91,7 +94,8 @@ const Register = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Toggle password visibility"
             >
               {showPassword ? <EyeOff /> : <Eye />}
             </button>
@@ -99,9 +103,10 @@ const Register = () => {
 
           <motion.button
             type="submit"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="w-full flex justify-center items-center gap-2 bg-primary text-primary-foreground py-3 rounded-md transition-colors hover:bg-primary/90"
+            whileHover={{ scale: 1.03, y: -1 }}
+            whileTap={{ scale: 0.97 }}
+            className="w-full flex justify-center items-center gap-2 bg-primary text-primary-foreground py-3.5 rounded-lg shadow-sm hover:shadow-md transition-all text-base"
+            aria-label="Sign up"
           >
             <UserPlus />
             Sign Up
@@ -119,17 +124,15 @@ const Register = () => {
 
         <div className="grid grid-cols-2 gap-4">
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            className="w-full py-3 border border-border rounded-md flex items-center justify-center gap-2 hover:bg-accent"
+            whileHover={{ scale: 1.03 }}
+            className="w-full py-3 border border-border rounded-lg flex items-center justify-center gap-2 hover:bg-accent transition-all"
           >
-            {/* Add Google Icon Here */}
             <span>Google</span>
           </motion.button>
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            className="w-full py-3 border border-border rounded-md flex items-center justify-center gap-2 hover:bg-accent"
+            whileHover={{ scale: 1.03 }}
+            className="w-full py-3 border border-border rounded-lg flex items-center justify-center gap-2 hover:bg-accent transition-all"
           >
-            {/* Add GitHub Icon Here */}
             <span>GitHub</span>
           </motion.button>
         </div>
