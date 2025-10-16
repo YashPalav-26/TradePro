@@ -1,3 +1,4 @@
+'use client';
 import CandlestickChart from "@/components/CandlestickChart";
 import Header from "@/components/Header";
 import { motion } from "framer-motion";
