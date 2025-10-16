@@ -3,7 +3,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
+import { Eye, EyeOff, LogIn } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -33,110 +33,78 @@ const Login = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md p-8 space-y-6 bg-card border rounded-2xl shadow-sm"
+        transition={{ duration: 0.25, ease: 'easeOut' }}
+        className="w-full max-w-sm p-6 space-y-4 bg-card border rounded-xl"
       >
-        <div className="text-center">
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-2">Welcome Back</h1>
-          <p className="text-muted-foreground font-semibold">Sign in to continue to TradePro</p>
+        <div className="text-center space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Sign in</h1>
+          <p className="text-sm text-muted-foreground">Access your TradePro account</p>
         </div>
 
         {error && (
-          <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/30 rounded-md">
+          <div className="p-2 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/30 rounded-md">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-1">
+            <label htmlFor="email" className="text-sm text-foreground">Email</label>
             <input
+              id="email"
               type="email"
-              placeholder="Email"
+              placeholder="you@example.com"
               autoComplete="email"
-              className="w-full pl-10 pr-4 py-3 bg-background text-foreground border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full h-10 px-3 bg-background text-foreground border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
 
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Password"
-              autoComplete="current-password"
-              className="w-full pl-10 pr-10 py-3 bg-background text-foreground border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Toggle password visibility"
-            >
-              {showPassword ? <EyeOff /> : <Eye />}
-            </button>
+          <div className="space-y-1">
+            <label htmlFor="password" className="text-sm text-foreground">Password</label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                className="w-full h-10 pr-9 px-3 bg-background text-foreground border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Toggle password visibility"
+              >
+                {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <label className="flex items-center space-x-2">
-              <input type="checkbox" className="rounded border-border text-primary focus:ring-ring" />
-              <span className="text-sm text-muted-foreground">Remember me</span>
-            </label>
-            <a href="#" className="text-sm text-primary hover:underline">
-              Forgot password?
-            </a>
+          <div className="flex justify-end">
+            <a href="#" className="text-sm text-primary hover:underline">Forgot password?</a>
           </div>
 
-          <motion.button
+          <button
             type="submit"
-            whileHover={{ scale: 1.03, y: -1 }}
-            whileTap={{ scale: 0.97 }}
-            className="w-full flex justify-center items-center gap-2 bg-primary text-primary-foreground py-3.5 rounded-lg shadow-sm hover:shadow-md transition-all text-base"
+            className="w-full h-10 inline-flex justify-center items-center gap-2 bg-primary text-primary-foreground rounded-md text-sm"
             aria-label="Sign in"
           >
-            <LogIn />
-            Sign In
-          </motion.button>
+            <LogIn className="h-4 w-4" />
+            Sign in
+          </button>
         </form>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            className="w-full py-3 border border-border rounded-lg flex items-center justify-center gap-2 hover:bg-accent transition-all"
-          >
-            {/* Add Google Icon Here */}
-            <span>Google</span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            className="w-full py-3 border border-border rounded-lg flex items-center justify-center gap-2 hover:bg-accent transition-all"
-          >
-            {/* Add GitHub Icon Here */}
-            <span>GitHub</span>
-          </motion.button>
-        </div>
-
-        <p className="mt-6 text-center text-sm text-muted-foreground">
+        <p className="text-center text-sm text-muted-foreground">
           Don't have an account?{' '}
-          <a href="/register" className="font-medium text-primary hover:underline">
-            Sign up
-          </a>
+          <a href="/register" className="font-medium text-primary hover:underline">Sign up</a>
         </p>
       </motion.div>
     </div>
