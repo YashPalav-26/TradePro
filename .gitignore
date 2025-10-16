@@ -17,6 +17,7 @@
 # misc
 .DS_Store
 *.pem
+WARP.md
 GEMINI.md
 bun.lock
 
