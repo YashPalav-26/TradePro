@@ -43,18 +43,16 @@ const FeatureBox = ({ icon, title, description, delay }: any) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay }}
-      className="bg-card p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"
+      className="bg-card p-6 border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col items-center text-center h-full"
     >
-      <div className="text-primary mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold mb-2 text-foreground">
+      <div className="text-primary mb-4 bg-secondary/60 p-3 rounded-lg border border-border/60">{icon}</div>
+      <h3 className="text-lg font-semibold mb-2 text-foreground">
         {title}
       </h3>
-      <p className="text-muted-foreground mb-4 flex-grow">{description}</p>
+      <p className="text-muted-foreground mb-4 flex-grow text-sm">{description}</p>
       <motion.button
-        whileHover={{
-          x: 5,
-        }}
-        className="mt-auto text-primary flex items-center text-sm font-medium"
+        whileHover={{ x: 3 }}
+        className="mt-auto text-foreground bg-accent px-4 py-2 rounded-md border border-transparent hover:border-border transition-all flex items-center text-sm"
       >
         Learn More <ArrowRight className="ml-1" size={16} />
       </motion.button>
@@ -68,11 +66,11 @@ const TestimonialCard = ({ quote, author, role, delay }: any) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay }}
-      className="bg-card p-6 rounded-xl shadow-lg flex flex-col justify-between h-full"
+      className="bg-card p-6 border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between h-full"
     >
       <p className="text-muted-foreground mb-4">"{quote}"</p>
       <div>
-        <p className="font-semibold text-foreground">{author}</p>
+        <p className="font-medium text-foreground">{author}</p>
         <p className="text-sm text-muted-foreground">{role}</p>
       </div>
     </motion.div>
@@ -90,37 +88,37 @@ export default function Home() {
 
   const tradingFeatures = [
     {
-      icon: <Globe size={32} />,
+      icon: <Globe size={28} />,
       title: "Global Markets",
       description:
         "Access a wide range of international markets and trade various assets from a single platform.",
     },
     {
-      icon: <Zap size={32} />,
+      icon: <Zap size={28} />,
       title: "Real-time Data",
       description:
         "Stay informed with lightning-fast, real-time market data and instant trade execution.",
     },
     {
-      icon: <Shield size={32} />,
+      icon: <Shield size={28} />,
       title: "Secure Trading",
       description:
         "Trade with confidence using our advanced encryption and multi-factor authentication systems.",
     },
     {
-      icon: <PieChart size={32} />,
+      icon: <PieChart size={28} />,
       title: "Portfolio Analysis",
       description:
         "Gain insights into your portfolio performance with comprehensive analysis tools and reports.",
     },
     {
-      icon: <Bell size={32} />,
+      icon: <Bell size={28} />,
       title: "Price Alerts",
       description:
         "Never miss a trading opportunity with customizable price alerts and notifications.",
     },
     {
-      icon: <Book size={32} />,
+      icon: <Book size={28} />,
       title: "Trading Education",
       description:
         "Enhance your trading skills with our extensive library of educational resources and webinars.",
@@ -154,6 +152,7 @@ export default function Home() {
       <button
         className="p-2 rounded-md hover:bg-accent"
         onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+        aria-label="Toggle theme"
       >
         {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
       </button>
@@ -161,41 +160,41 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-background min-h-screen font-sans text-foreground">
+    <div className="bg-background min-h-screen text-foreground">
       <header className="container mx-auto px-4 py-6 flex justify-between items-center relative z-20">
         <motion.div
-          initial={{ opacity: 0, x: -50 }}
+          initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-3xl font-bold text-primary"
+          transition={{ duration: 0.4 }}
+          className="text-2xl md:text-3xl font-semibold tracking-tight"
         >
           TradePro
         </motion.div>
         <nav className="hidden md:block">
-          <ul className="flex space-x-6 items-center">
+          <ul className="flex gap-6 items-center text-sm">
             {["Markets", "Trading", "Analysis", "Learn"].map((item, index) => (
               <motion.li
                 key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <span className="text-muted-foreground hover:text-primary transition-colors">
+                <span className="text-muted-foreground hover:text-foreground transition-colors">
                   {item}
                 </span>
               </motion.li>
             ))}
           </ul>
         </nav>
-        <div className="hidden md:flex items-center space-x-4">
+        <div className="hidden md:flex items-center gap-3">
           {renderThemeChanger()}
           <motion.button
-            initial={{ opacity: 0, x: 50 }}
+            initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
+            transition={{ duration: 0.3 }}
+            whileHover={{ scale: 1.03, y: -1 }}
+            whileTap={{ scale: 0.97 }}
+            className="bg-primary text-primary-foreground px-5 py-2.5 rounded-lg shadow-sm hover:shadow-md border border-transparent"
             onClick={() => router.push("/login")}
           >
             Start Trading
@@ -204,12 +203,13 @@ export default function Home() {
         <div className="md:hidden flex items-center">
           {renderThemeChanger()}
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="ml-4"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="ml-3 rounded-md p-2 hover:bg-accent"
             onClick={() => setismenuopen(!ismenuopen)}
+            aria-label="Open menu"
           >
-            {ismenuopen ? <X size={24} /> : <Menu size={24} />}
+            {ismenuopen ? <X size={22} /> : <Menu size={22} />}
           </motion.button>
         </div>
       </header>
@@ -218,30 +218,30 @@ export default function Home() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.6 }}
-          className="md:hidden bg-card px-4 py-2"
+          transition={{ duration: 0.3 }}
+          className="md:hidden bg-card/95 backdrop-blur px-4 py-2 border-b"
         >
           <ul className="space-y-3">
             {["Markets", "Trading", "Analysis", "Learn"].map((item, index) => (
               <motion.li
                 key={index}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <span className=" block text-muted-foreground hover:text-primary transition-colors py-2">
+                <span className="block text-muted-foreground hover:text-foreground transition-colors py-2">
                   {item}
                 </span>
               </motion.li>
             ))}
             <motion.li
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
             >
               <button
                 onClick={() => router.push("/login")}
-                className="w-full bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
+                className="w-full bg-primary text-primary-foreground px-5 py-2.5 rounded-lg shadow-sm hover:shadow-md border border-transparent"
               >
                 Start Trading
               </button>
@@ -251,57 +251,57 @@ export default function Home() {
       )}
       <main className="container mx-auto px-4">
         <Animatedsection>
-          <div className="text-center py-20">
+          <div className="text-center py-16 md:py-20">
             <motion.h1
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-6xl font-bold mb-6 text-foreground"
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-4xl md:text-6xl font-semibold tracking-tight mb-5"
             >
-              Trade Smarter, Not Harder
+              Trade Smarter,
+              <br />
+              Not Harder
             </motion.h1>
             <motion.p
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-2xl text-muted-foreground mb-12"
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto"
             >
-              Access global markets with real-time data and advanced trading
-              tools
+              Access global markets with real-time data and advanced trading tools.
             </motion.p>
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, y: 20 }}
+              whileHover={{ scale: 1.04, y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
               onClick={() => router.push("/register")}
-              className="bg-primary text-primary-foreground px-8 py-4 rounded-md text-xl hover:bg-primary/90 transition-colors flex items-center mx-auto"
+              className="bg-primary text-primary-foreground px-8 py-4 rounded-xl shadow-sm hover:shadow-md border border-transparent inline-flex items-center"
             >
-              Open Free Account <ArrowRight className="ml-2" />
+              Open Free Account <ArrowRight className="ml-2" size={20} />
             </motion.button>
           </div>
         </Animatedsection>
 
         <Animatedsection>
-          <div className="py-20">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-foreground mb-4">
+          <div className="py-16">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-3">
                 Why Choose TradePro?
               </h2>
-              <p className="text-xl text-muted-foreground">
-                Experience the advantage of professional-grade trading tools
-                and resources.
+              <p className="text-base md:text-lg text-muted-foreground">
+                Experience the advantage of professional-grade trading tools and resources.
               </p>
             </div>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-6 md:gap-8">
               {tradingFeatures.map((feature, index) => (
                 <FeatureBox
                   key={index}
                   icon={feature.icon}
                   title={feature.title}
                   description={feature.description}
-                  delay={index * 0.1}
+                  delay={index * 0.05}
                 />
               ))}
             </div>
@@ -309,23 +309,23 @@ export default function Home() {
         </Animatedsection>
 
         <Animatedsection>
-          <div className="py-20">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-foreground mb-4">
+          <div className="py-16">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-3">
                 What Our Users Say
               </h2>
-              <p className="text-xl text-muted-foreground">
+              <p className="text-base md:text-lg text-muted-foreground">
                 Thousands of traders trust TradePro to power their financial journey.
               </p>
             </div>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-6 md:gap-8">
               {testimonials.map((testimonial, index) => (
                 <TestimonialCard
                   key={index}
                   quote={testimonial.quote}
                   author={testimonial.author}
                   role={testimonial.role}
-                  delay={index * 0.1}
+                  delay={index * 0.05}
                 />
               ))}
             </div>
@@ -333,51 +333,50 @@ export default function Home() {
         </Animatedsection>
 
         <Animatedsection>
-          <div className="py-20">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-foreground mb-4">
+          <div className="py-16">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-6">
                 Get Started in 3 Easy Steps
               </h2>
             </div>
-            <div className="grid md:grid-cols-3 gap-8 text-center">
+            <div className="grid md:grid-cols-3 gap-6 md:gap-8 text-center">
               <div className="flex flex-col items-center">
-                <div className="bg-primary text-primary-foreground rounded-full h-16 w-16 flex items-center justify-center text-2xl font-bold mb-4">
+                <div className="bg-primary text-primary-foreground border h-16 w-16 flex items-center justify-center text-2xl font-semibold rounded-xl mb-4 shadow-sm">
                   1
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Create Account</h3>
-                <p className="text-muted-foreground">Sign up for a free account in minutes.</p>
+                <h3 className="text-lg font-medium mb-1">Create Account</h3>
+                <p className="text-muted-foreground text-sm">Sign up for a free account in minutes.</p>
               </div>
               <div className="flex flex-col items-center">
-                <div className="bg-primary text-primary-foreground rounded-full h-16 w-16 flex items-center justify-center text-2xl font-bold mb-4">
+                <div className="bg-secondary text-secondary-foreground border h-16 w-16 flex items-center justify-center text-2xl font-semibold rounded-xl mb-4 shadow-sm">
                   2
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Fund Your Account</h3>
-                <p className="text-muted-foreground">Securely deposit funds to start trading.</p>
+                <h3 className="text-lg font-medium mb-1">Fund Your Account</h3>
+                <p className="text-muted-foreground text-sm">Securely deposit funds to start trading.</p>
               </div>
               <div className="flex flex-col items-center">
-                <div className="bg-primary text-primary-foreground rounded-full h-16 w-16 flex items-center justify-center text-2xl font-bold mb-4">
+                <div className="bg-accent text-accent-foreground border h-16 w-16 flex items-center justify-center text-2xl font-semibold rounded-xl mb-4 shadow-sm">
                   3
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Start Trading</h3>
-                <p className="text-muted-foreground">Access global markets and trade your favorite assets.</p>
+                <h3 className="text-lg font-medium mb-1">Start Trading</h3>
+                <p className="text-muted-foreground text-sm">Access global markets and trade your favorite assets.</p>
               </div>
             </div>
           </div>
         </Animatedsection>
 
         <Animatedsection>
-          <div className="bg-card rounded-2xl p-12 text-center my-20">
-            <h2 className="text-4xl font-bold mb-6 text-foreground">
+          <div className="bg-card border rounded-2xl p-10 text-center my-16 shadow-sm">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">
               Ready to Start Trading?
             </h2>
-            <p className="text-xl mb-8 text-muted-foreground">
-              Join thousands of traders and start your journey to financial
-              success.
+            <p className="text-base md:text-lg mb-8 text-muted-foreground">
+              Join thousands of traders and start your journey to financial success.
             </p>
             <motion.button
-              className="bg-primary text-primary-foreground px-8 py-4 rounded-md text-xl font-bold hover:bg-primary/90 transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="bg-primary text-primary-foreground px-8 py-4 rounded-xl shadow-sm hover:shadow-md border border-transparent"
+              whileHover={{ scale: 1.04, y: -1 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => router.push("/register")}
             >
               Create Free Account
@@ -386,49 +385,41 @@ export default function Home() {
         </Animatedsection>
       </main>
 
-      <footer className="bg-card py-8">
+      <footer className="bg-card/70 backdrop-blur border-t py-8">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="font-semibold mb-4 text-foreground">TradePro</h3>
-              <p className="text-muted-foreground text-sm">
-                Trade Smarter, Not Harder.
-              </p>
+              <h3 className="font-medium mb-3 text-foreground">TradePro</h3>
+              <p className="text-muted-foreground text-sm">Trade Smarter, Not Harder.</p>
             </div>
             <div>
-              <h3 className="font-semibold mb-4 text-foreground">Products</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">Stocks</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">Futures & Options</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">IPO</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">Mutual Funds</a></li>
+              <h3 className="font-medium mb-3 text-foreground">Products</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-muted-foreground hover:text-foreground">Stocks</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-foreground">Futures & Options</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-foreground">IPO</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-foreground">Mutual Funds</a></li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-4 text-foreground">Company</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">About Us</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">Pricing</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">Blog</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary text-sm">Careers</a></li>
+              <h3 className="font-medium mb-3 text-foreground">Company</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-muted-foreground hover:text-foreground">About Us</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-foreground">Pricing</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-foreground">Blog</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-foreground">Careers</a></li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-4 text-foreground">Social</h3>
-              <div className="flex space-x-4">
-                <a href="#" className="text-muted-foreground hover:text-primary">
-                  <Twitter />
-                </a>
-                <a href="#" className="text-muted-foreground hover:text-primary">
-                  <Linkedin />
-                </a>
-                <a href="#" className="text-muted-foreground hover:text-primary">
-                  <Instagram />
-                </a>
+              <h3 className="font-medium mb-3 text-foreground">Social</h3>
+              <div className="flex space-x-4 text-muted-foreground">
+                <a href="#" className="hover:text-foreground"><Twitter /></a>
+                <a href="#" className="hover:text-foreground"><Linkedin /></a>
+                <a href="#" className="hover:text-foreground"><Instagram /></a>
               </div>
             </div>
           </div>
-          <div className="mt-8 pt-8 border-t border-border text-center text-muted-foreground text-sm">
+          <div className="mt-8 pt-8 border-t text-center text-muted-foreground text-sm">
             <p>&copy; {new Date().getFullYear()} TradePro. All rights reserved.</p>
           </div>
         </div>
