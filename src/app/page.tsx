@@ -28,9 +28,9 @@ const Animatedsection = ({ children }: any) => {
   return (
     <motion.section
       ref={ref}
-      initial={{ opacity: 0, y: 50 }}
-      animate={isinview ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-      transition={{ duration: 0.6 }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={isinview ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
     >
       {children}
     </motion.section>
@@ -40,22 +40,20 @@ const Animatedsection = ({ children }: any) => {
 const FeatureBox = ({ icon, title, description, delay }: any) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay }}
-      className="bg-card p-6 border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col items-center text-center h-full"
+      transition={{ duration: 0.4, delay }}
+whileHover={{ y: -4 }}
+      className="bg-card border rounded-xl p-6 flex flex-col h-full shadow-soft hover:shadow-soft-lg transition-shadow"
     >
-      <div className="text-primary mb-4 bg-secondary/60 p-3 rounded-lg border border-border/60">{icon}</div>
-      <h3 className="text-lg font-semibold mb-2 text-foreground">
-        {title}
-      </h3>
-      <p className="text-muted-foreground mb-4 flex-grow text-sm">{description}</p>
-      <motion.button
-        whileHover={{ x: 3 }}
-        className="mt-auto text-foreground bg-accent px-4 py-2 rounded-md border border-transparent hover:border-border transition-all flex items-center text-sm"
-      >
-        Learn More <ArrowRight className="ml-1" size={16} />
-      </motion.button>
+      <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-primary">
+        {icon}
+      </div>
+      <h3 className="text-base font-semibold mb-1">{title}</h3>
+      <p className="text-sm text-muted-foreground flex-grow">{description}</p>
+      <button className="mt-4 inline-flex items-center text-sm text-primary hover:underline">
+        Learn more <ArrowRight size={16} className="ml-1" />
+      </button>
     </motion.div>
   );
 };
@@ -63,15 +61,20 @@ const FeatureBox = ({ icon, title, description, delay }: any) => {
 const TestimonialCard = ({ quote, author, role, delay }: any) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay }}
-      className="bg-card p-6 border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between h-full"
+      transition={{ duration: 0.4, delay }}
+className="bg-card border rounded-xl p-6 h-full flex flex-col shadow-soft hover:shadow-soft-lg transition-shadow"
     >
-      <p className="text-muted-foreground mb-4">"{quote}"</p>
-      <div>
-        <p className="font-medium text-foreground">{author}</p>
-        <p className="text-sm text-muted-foreground">{role}</p>
+      <p className="text-sm text-muted-foreground italic mb-4">“{quote}”</p>
+      <div className="mt-auto flex items-center gap-3">
+        <div className="h-8 w-8 rounded-full bg-secondary text-primary flex items-center justify-center text-xs font-semibold">
+          {author.charAt(0)}
+        </div>
+        <div>
+          <p className="text-sm font-medium">{author}</p>
+          <p className="text-xs text-muted-foreground">{role}</p>
+        </div>
       </div>
     </motion.div>
   );
@@ -251,48 +254,53 @@ export default function Home() {
       )}
       <main className="container mx-auto px-4">
         <Animatedsection>
-          <div className="text-center py-16 md:py-20">
+          <div className="py-20 md:py-24 text-center">
             <motion.h1
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-4xl md:text-6xl font-semibold tracking-tight mb-5"
+              transition={{ duration: 0.4 }}
+              className="text-4xl md:text-6xl font-bold tracking-tight mb-4"
             >
-              Trade Smarter,
-              <br />
-              Not Harder
+              Trade smarter with a minimal, powerful platform
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto"
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="text-base md:text-lg text-muted-foreground mb-8 max-w-2xl mx-auto"
             >
-              Access global markets with real-time data and advanced trading tools.
+              Real-time data, secure execution, and clean tools built for focus.
             </motion.p>
-            <motion.button
-              whileHover={{ scale: 1.04, y: -1 }}
-              whileTap={{ scale: 0.98 }}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              onClick={() => router.push("/register")}
-              className="bg-primary text-primary-foreground px-8 py-4 rounded-xl shadow-sm hover:shadow-md border border-transparent inline-flex items-center"
-            >
-              Open Free Account <ArrowRight className="ml-2" size={20} />
-            </motion.button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => router.push("/register")}
+                className="bg-primary text-primary-foreground px-7 py-3 rounded-lg font-semibold inline-flex items-center gap-2"
+              >
+                Get started
+                <ArrowRight size={18} />
+              </motion.button>
+              <button
+                onClick={() => router.push("/demo")}
+                className="px-7 py-3 rounded-lg border text-foreground bg-card hover:bg-accent"
+              >
+                View demo
+              </button>
+            </div>
+            <div className="mt-8 flex flex-wrap justify-center items-center gap-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2"><Shield size={16} /> Secure</div>
+              <div className="flex items-center gap-2"><Zap size={16} /> Fast</div>
+              <div className="flex items-center gap-2"><BarChart2 size={16} /> Analytics</div>
+            </div>
           </div>
         </Animatedsection>
 
         <Animatedsection>
           <div className="py-16">
             <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-3">
-                Why Choose TradePro?
-              </h2>
-              <p className="text-base md:text-lg text-muted-foreground">
-                Experience the advantage of professional-grade trading tools and resources.
-              </p>
+              <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-2">Why Choose TradePro?</h2>
+              <p className="text-sm md:text-base text-muted-foreground">Professional-grade tools with a focus on clarity and speed.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-6 md:gap-8">
               {tradingFeatures.map((feature, index) => (
@@ -335,52 +343,45 @@ export default function Home() {
         <Animatedsection>
           <div className="py-16">
             <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-6">
-                Get Started in 3 Easy Steps
-              </h2>
+              <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-2">Get started in 3 simple steps</h2>
+              <p className="text-sm md:text-base text-muted-foreground">It takes less than 5 minutes to be up and running.</p>
             </div>
-            <div className="grid md:grid-cols-3 gap-6 md:gap-8 text-center">
-              <div className="flex flex-col items-center">
-                <div className="bg-primary text-primary-foreground border h-16 w-16 flex items-center justify-center text-2xl font-semibold rounded-xl mb-4 shadow-sm">
-                  1
-                </div>
-                <h3 className="text-lg font-medium mb-1">Create Account</h3>
-                <p className="text-muted-foreground text-sm">Sign up for a free account in minutes.</p>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="bg-secondary text-secondary-foreground border h-16 w-16 flex items-center justify-center text-2xl font-semibold rounded-xl mb-4 shadow-sm">
-                  2
-                </div>
-                <h3 className="text-lg font-medium mb-1">Fund Your Account</h3>
-                <p className="text-muted-foreground text-sm">Securely deposit funds to start trading.</p>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="bg-accent text-accent-foreground border h-16 w-16 flex items-center justify-center text-2xl font-semibold rounded-xl mb-4 shadow-sm">
-                  3
-                </div>
-                <h3 className="text-lg font-medium mb-1">Start Trading</h3>
-                <p className="text-muted-foreground text-sm">Access global markets and trade your favorite assets.</p>
-              </div>
+
+            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              {[{
+                n: 1, t: "Create account", d: "Sign up with your email—no paperwork." },
+                { n: 2, t: "Fund", d: "Add money securely with multiple methods." },
+                { n: 3, t: "Trade", d: "Start with a demo or go live instantly." }].map((s, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }} className="bg-card border rounded-xl p-6 text-center">
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-foreground/80 font-semibold">
+                    {s.n}
+                  </div>
+                  <h3 className="font-semibold mb-1">{s.t}</h3>
+                  <p className="text-sm text-muted-foreground">{s.d}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="text-center mt-10">
+              <button onClick={() => router.push("/register")} className="px-7 py-3 rounded-lg bg-primary text-primary-foreground inline-flex items-center gap-2">
+                Create free account <ArrowRight size={18} />
+              </button>
             </div>
           </div>
         </Animatedsection>
 
         <Animatedsection>
-          <div className="bg-card border rounded-2xl p-10 text-center my-16 shadow-sm">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">
-              Ready to Start Trading?
-            </h2>
-            <p className="text-base md:text-lg mb-8 text-muted-foreground">
-              Join thousands of traders and start your journey to financial success.
-            </p>
-            <motion.button
-              className="bg-primary text-primary-foreground px-8 py-4 rounded-xl shadow-sm hover:shadow-md border border-transparent"
-              whileHover={{ scale: 1.04, y: -1 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => router.push("/register")}
-            >
-              Create Free Account
-            </motion.button>
+          <div className="my-16 text-center">
+<div className="bg-card border rounded-2xl p-10 shadow-soft-md">
+              <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-3">Ready to start trading?</h2>
+              <p className="text-sm md:text-base text-muted-foreground mb-6 max-w-2xl mx-auto">Join thousands of traders using a cleaner, faster platform.</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button onClick={() => router.push("/register")} className="px-7 py-3 rounded-lg bg-primary text-primary-foreground inline-flex items-center gap-2">
+                  Create free account <ArrowRight size={18} />
+                </button>
+                <button onClick={() => router.push("/demo")} className="px-7 py-3 rounded-lg border bg-card">Try demo</button>
+              </div>
+            </div>
           </div>
         </Animatedsection>
       </main>
